@@ -79,7 +79,13 @@ export default function IssueDetail({ issueId, onBack, onEdit, onShowNotificatio
     return user ? user.name : 'Usuari desconegut';
   };
 
-  const getCommentAuthor = (comment) => comment.created_by?.full_name || comment.user?.name || comment.author?.username || 'Usuari desconegut';
+  const getCommentAuthor = (comment) => {
+    const authorName = comment.created_by?.full_name || comment.user?.name || comment.author?.username;
+    if (authorName) return authorName;
+    const authorId = getCommentOwnerId(comment);
+    const user = USERS.find((u) => u.id === authorId);
+    return user ? user.name : 'Usuari desconegut';
+  };
   const getName = (list, id) => list?.find(item => item.id === id)?.name || "-";
   const getColor = (list, id) => list?.find(item => item.id === id)?.color || "#6b7280";
   const getUserNameById = (id) => USERS.find((u) => u.id === parseInt(id))?.name || "Sense assignar";
@@ -158,6 +164,16 @@ export default function IssueDetail({ issueId, onBack, onEdit, onShowNotificatio
     } catch (error) {
       onShowNotification('Error eliminant el comentari.', 'error');
     }
+  };
+
+  const startEditComment = (comment) => {
+    setCurrentEditId(comment.id);
+    setEditCommentText(comment.content);
+  };
+
+  const cancelEditComment = () => {
+    setCurrentEditId(null);
+    setEditCommentText('');
   };
 
   // Issue global actions
@@ -363,7 +379,7 @@ export default function IssueDetail({ issueId, onBack, onEdit, onShowNotificatio
                         </div>
                         
                         <div className="flex items-center gap-2">
-                          {isIssueOwner && (
+                          {(isIssueOwner || isCommentOwner(comment)) && (
                             <button onClick={() => handleDeleteComment(comment.id)} className="text-[11px] font-semibold text-red-500 hover:text-red-700 uppercase tracking-wider">Eliminar</button>
                           )}
                           {isCommentOwner(comment) && currentEditId !== comment.id && (

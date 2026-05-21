@@ -27,6 +27,32 @@ export default function IssueList({ onNavigateToBulk, onNavigateToCreate, onView
   const getName = (list, id) => list?.find(item => item.id === id)?.name || "-";
   const getColor = (list, id) => list?.find(item => item.id === id)?.color || "#6b7280";
 
+  const handleSortHeader = (field) => {
+    setFilters((prev) => {
+      const isCurrent = prev.sort === field;
+      
+      if (!isCurrent) {
+        // Primer clic en este campo: ordena ascendent
+        return { ...prev, sort: field, direction: 'asc' };
+      }
+      
+      if (prev.direction === 'asc') {
+        // Segundo clic: cambia a descendent
+        return { ...prev, sort: field, direction: 'desc' };
+      }
+      
+      // Tercer clic: quita la ordenación (vuelve a id desc)
+      return { ...prev, sort: 'id', direction: 'desc' };
+    });
+  };
+
+  const renderSortIndicator = (field) => {
+    if (filters.sort !== field) return <span className="text-gray-400">↕</span>;
+    return (
+      <span className="text-sm">{filters.direction === 'asc' ? '▲' : '▼'}</span>
+    );
+  };
+
   useEffect(() => {
     fetchIssues();
   }, [currentUser, filters.query, filters.sort, filters.direction, filters.type, filters.status, filters.priority, filters.severity]);
@@ -41,16 +67,6 @@ export default function IssueList({ onNavigateToBulk, onNavigateToCreate, onView
       {/* TopNavBar */}
       <nav className="bg-white border-b border-gray-200 shadow-sm flex justify-between items-center px-6 h-16 w-full z-40 sticky top-0">
         <div className="flex items-center gap-6">
-          <form onSubmit={handleSearch} className="hidden md:flex items-center bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500 transition-all w-64">
-            <span className="material-symbols-outlined text-gray-400 text-[18px] mr-2">search</span>
-            <input 
-              className="bg-transparent border-none focus:ring-0 p-0 text-sm w-full text-gray-800 placeholder-gray-400 outline-none" 
-              placeholder="Search subject..." 
-              type="text"
-              value={filters.query}
-              onChange={(e) => setFilters({ ...filters, query: e.target.value })}
-            />
-          </form>
         </div>
         
         <div className="flex items-center gap-2 md:gap-4">
@@ -86,7 +102,6 @@ export default function IssueList({ onNavigateToBulk, onNavigateToCreate, onView
       {/* Main Canvas */}
       <main className="flex-1 w-full max-w-[1200px] mx-auto px-4 sm:px-6 py-8 flex flex-col gap-6">
         
-        {/* Header Section */}
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <h1 className="text-3xl font-bold text-gray-900">Incidències</h1>
           <div className="flex flex-wrap items-center gap-3">
@@ -101,7 +116,18 @@ export default function IssueList({ onNavigateToBulk, onNavigateToCreate, onView
           </div>
         </header>
 
-        {/* Filters Section */}
+        {/* Search Bar */}
+        <form onSubmit={handleSearch} className="flex items-center bg-white border border-gray-200 rounded-lg px-3 py-2 focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500 transition-all w-full md:w-64">
+          <span className="material-symbols-outlined text-gray-400 text-[18px] mr-2">search</span>
+          <input 
+            className="bg-transparent border-none focus:ring-0 p-0 text-sm w-full text-gray-800 placeholder-gray-400 outline-none" 
+            placeholder="Cercar per assumpte..." 
+            type="text"
+            value={filters.query}
+            onChange={(e) => setFilters({ ...filters, query: e.target.value })}
+          />
+        </form>
+
         <section className="flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
           <div className="flex flex-wrap items-center gap-3">
             <div className="relative">
@@ -181,7 +207,7 @@ export default function IssueList({ onNavigateToBulk, onNavigateToCreate, onView
           </div>
         </section>
 
-        {/* Data Table */}
+
         <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex-1 mb-8">
           {loading ? (
             <div className="text-center py-20">
@@ -193,21 +219,58 @@ export default function IssueList({ onNavigateToBulk, onNavigateToCreate, onView
               <table className="w-full text-left border-collapse whitespace-nowrap">
                 <thead>
                   <tr className="border-b border-gray-200 bg-gray-50">
-                    <th className="px-5 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">ID</th>
-                    <th className="px-5 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Subjecte</th>
-                    <th className="px-5 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Estat</th>
-                    <th className="px-5 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Tipus</th>
-                    <th className="px-5 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Prioritat</th>
-                    <th className="px-5 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Severitat</th>
-                    <th className="px-5 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Deadline</th>
-                    <th className="px-5 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Creador</th>
-                    <th className="px-5 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Assignat</th>
+                    <th className="px-5 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                      <button type="button" onClick={() => handleSortHeader('id')} className="flex items-center gap-1 text-left w-full text-gray-500 hover:text-emerald-600 transition-colors">
+                        ID {renderSortIndicator('id')}
+                      </button>
+                    </th>
+                    <th className="px-5 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                      <button type="button" onClick={() => handleSortHeader('subject')} className="flex items-center gap-1 text-left w-full text-gray-500 hover:text-emerald-600 transition-colors">
+                        Subjecte {renderSortIndicator('subject')}
+                      </button>
+                    </th>
+                    <th className="px-5 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                      <button type="button" onClick={() => handleSortHeader('status')} className="flex items-center gap-1 text-left w-full text-gray-500 hover:text-emerald-600 transition-colors">
+                        Estat {renderSortIndicator('status')}
+                      </button>
+                    </th>
+                    <th className="px-5 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                      <button type="button" onClick={() => handleSortHeader('type')} className="flex items-center gap-1 text-left w-full text-gray-500 hover:text-emerald-600 transition-colors">
+                        Tipus {renderSortIndicator('type')}
+                      </button>
+                    </th>
+                    <th className="px-5 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                      <button type="button" onClick={() => handleSortHeader('priority')} className="flex items-center gap-1 text-left w-full text-gray-500 hover:text-emerald-600 transition-colors">
+                        Prioritat {renderSortIndicator('priority')}
+                      </button>
+                    </th>
+                    <th className="px-5 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                      <button type="button" onClick={() => handleSortHeader('severity')} className="flex items-center gap-1 text-left w-full text-gray-500 hover:text-emerald-600 transition-colors">
+                        Severitat {renderSortIndicator('severity')}
+                      </button>
+                    </th>
+                    <th className="px-5 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                      <button type="button" onClick={() => handleSortHeader('deadline')} className="flex items-center gap-1 text-left w-full text-gray-500 hover:text-emerald-600 transition-colors">
+                        Deadline {renderSortIndicator('deadline')}
+                      </button>
+                    </th>
+                    <th className="px-5 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                      <button type="button" onClick={() => handleSortHeader('creator')} className="flex items-center gap-1 text-left w-full text-gray-500 hover:text-emerald-600 transition-colors">
+                        Creador {renderSortIndicator('creator')}
+                      </button>
+                    </th>
+                    <th className="px-5 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                      <button type="button" onClick={() => handleSortHeader('assignee')} className="flex items-center gap-1 text-left w-full text-gray-500 hover:text-emerald-600 transition-colors">
+                        Assignat {renderSortIndicator('assignee')}
+                      </button>
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="text-sm text-gray-800">
                   {issues.map((issue, index) => {
                     const statusName = getName(statuses, issue.status_id);
                     const statusColor = getColor(statuses, issue.status_id);
+                    const typeColor = getColor(issueTypes, issue.issue_type_id);
                     const priorityColor = getColor(priorities, issue.priority_id);
                     const severityColor = getColor(severities, issue.severity_id);
                     
@@ -218,19 +281,19 @@ export default function IssueList({ onNavigateToBulk, onNavigateToCreate, onView
                           {issue.subject}
                         </td>
                         <td className="px-5 py-4">
-                          {/* Opacidad en HEX añadiendo '15' (aprox 10%) al final del color */}
                           <span 
                             className="px-3 py-1 rounded-full text-xs font-semibold inline-flex items-center border"
-                            style={{ 
-                              backgroundColor: `${statusColor}15`, 
-                              color: statusColor, 
-                              borderColor: `${statusColor}30` 
-                            }}
+                            style={{ backgroundColor: `${statusColor}15`, color: statusColor, borderColor: `${statusColor}30` }}
                           >
                             {statusName}
                           </span>
                         </td>
-                        <td className="px-5 py-4 text-gray-600">{getName(issueTypes, issue.issue_type_id)}</td>
+                        <td className="px-5 py-4">
+                          <div className="flex items-center gap-2">
+                             <span className="w-2 h-2 rounded-full" style={{ backgroundColor: typeColor }}></span>
+                             {getName(issueTypes, issue.issue_type_id)}
+                          </div>
+                        </td>
                         <td className="px-5 py-4">
                           <div className="flex items-center gap-2">
                             <span className="w-2 h-2 rounded-full" style={{ backgroundColor: priorityColor }}></span>

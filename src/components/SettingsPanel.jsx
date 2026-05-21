@@ -12,8 +12,7 @@ import {
 const SECTIONS = [
   { key: 'statuses', label: 'ESTATS', service: statusService, fields: [
     { name: 'name', label: 'Nom', type: 'text', required: true },
-    { name: 'color', label: 'Color', type: 'color', required: false },
-    { name: 'is_closed', label: 'Tancat', type: 'checkbox', required: false }
+    { name: 'color', label: 'Color', type: 'color', required: false }
   ]},
   { key: 'priorities', label: 'PRIORITATS', service: priorityService, fields: [
     { name: 'name', label: 'Nom', type: 'text', required: true },
@@ -64,11 +63,24 @@ function ItemForm({ fields, initial, loading, onSave, onCancel }) {
           <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">{f.label}</label>
           {f.type === 'checkbox' ? (
             <input type="checkbox" checked={!!form[f.name]} onChange={e => handleChange(f.name, e.target.checked)} className="w-5 h-5 rounded border-gray-300 text-emerald-500 focus:ring-emerald-500" />
+          ) : f.type === 'color' ? (
+            <div className="flex items-center gap-2">
+              <input 
+                type="color" value={form[f.name] ?? '#4c8bf5'} onChange={e => handleChange(f.name, e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-md text-sm outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+                style={{ width: '50px', height: '36px' }}
+              />
+              <div 
+                className="w-12 h-9 rounded-md border-2 border-gray-300"
+                style={{ backgroundColor: form[f.name] ?? '#4c8bf5' }}
+                title="Vista previa del color"
+              />
+            </div>
           ) : (
             <input 
               type={f.type} value={form[f.name] ?? ''} onChange={e => handleChange(f.name, e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-md text-sm outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-              style={{ width: f.type === 'color' ? '50px' : f.type === 'number' ? '80px' : '160px' }}
+              style={{ width: f.type === 'number' ? '80px' : '160px' }}
             />
           )}
         </div>
@@ -140,11 +152,10 @@ function SettingsSection({ section, items, refresh, apiKey, onShowNotification }
                   {item.color && <div className="w-3 h-3 rounded-full" style={{ background: item.color }} />}
                   <span className="text-sm font-medium text-gray-800">{item.name}</span>
                   {(item.offset_days != null || item.days != null) && <span className="text-xs text-gray-400">{item.offset_days ?? item.days} dies</span>}
-                  {item.is_closed && <span className="text-[10px] bg-red-50 text-red-600 px-2 py-0.5 rounded-full font-semibold uppercase">Tancat</span>}
                 </div>
-                <div className="flex gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button onClick={() => setEditingId(item.id)} className="text-xs font-bold text-gray-400 hover:text-emerald-600 uppercase">Editar</button>
-                  <button onClick={() => handleDelete(item.id, item.name)} className="text-xs font-bold text-gray-400 hover:text-red-600 uppercase">Eliminar</button>
+                <div className="flex gap-3">
+                  <button onClick={() => setEditingId(item.id)} className="text-xs font-bold text-emerald-600 hover:text-emerald-700 uppercase">Editar</button>
+                  <button onClick={() => handleDelete(item.id, item.name)} className="text-xs font-bold text-red-600 hover:text-red-700 uppercase">Eliminar</button>
                 </div>
               </div>
             )}
