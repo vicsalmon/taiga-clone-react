@@ -272,6 +272,17 @@ export default function IssueDetail({ issueId, onBack, onEdit, onShowNotificatio
     }
   };
 
+  const handleDeleteDeadline = async () => {
+    try {
+      await issueService.deleteDeadline(currentUser.apiKey, issueId);
+      setIssue(prev => ({ ...prev, deadline: null }));
+      onShowNotification('Data límit eliminada.', 'success');
+    } catch (error) {
+      console.error(error);
+      onShowNotification('Error eliminant la data límit.', 'error');
+    }
+  };
+
   const getName = (list, id) => list?.find(item => item.id === id)?.name || "Desconegut";
 
   if (loading) return <div className="panel" style={{textAlign: 'center', padding: '50px'}}>Carregant detall...</div>;
@@ -464,8 +475,15 @@ export default function IssueDetail({ issueId, onBack, onEdit, onShowNotificatio
             <span style={{ marginLeft: '10px' }}>{getName(severities, issue.severity_id)}</span>
           </div>
           <div className="meta-item" style={{ borderTop: '1px solid #eee', paddingTop: '15px', marginTop: '15px' }}>
-            <span className="meta-label" style={{ fontWeight: 'bold', fontSize: '14px' }}>Data Límit:</span>
-            <span style={{ color: issue.deadline ? '#333' : '#aaa', marginLeft: '10px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span className="meta-label" style={{ fontWeight: 'bold', fontSize: '14px' }}>Data Límit:</span>
+              {issue.deadline && (
+                <button onClick={handleDeleteDeadline} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#e34935', fontSize: '12px' }}>
+                  Eliminar
+                </button>
+              )}
+            </div>
+            <span style={{ color: issue.deadline ? '#333' : '#aaa', display: 'block', marginTop: '5px' }}>
               {issue.deadline ? new Date(issue.deadline).toLocaleDateString() : "Sense especificar"}
             </span>
           </div>

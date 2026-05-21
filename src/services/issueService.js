@@ -7,33 +7,26 @@ const getHeaders = (apiKey) => ({
 });
 
 export const issueService = {
-  // VISUALITZAR, FILTRAR, ORDENAR I CERCAR
   getAll: async (apiKey, filters = {}) => {
     const params = new URLSearchParams();
-    
-    // Recorre el objeto y añade a la URL solo lo que tiene texto
     Object.keys(filters).forEach(key => {
       if (filters[key]) {
         params.append(key, filters[key]);
       }
     });
-    
     const response = await fetch(`${API_BASE_URL}/issues?${params.toString()}`, { 
       headers: getHeaders(apiKey) 
     });
-    
     if (!response.ok) throw new Error("Error carregant issues");
     return response.json();
   },
 
-  // VISUALITZAR DETALL
   getById: async (apiKey, id) => {
     const response = await fetch(`${API_BASE_URL}/issues/${id}`, { headers: getHeaders(apiKey) });
     if (!response.ok) throw new Error("Error carregant issue");
     return response.json();
   },
 
-  // CREAR
   create: async (apiKey, issueData) => {
     const response = await fetch(`${API_BASE_URL}/issues`, {
       method: "POST",
@@ -43,7 +36,6 @@ export const issueService = {
     return response.json();
   },
 
-  // EDITAR / ASSIGNAR
   update: async (apiKey, id, issueData) => {
     const response = await fetch(`${API_BASE_URL}/issues/${id}`, {
       method: "PUT",
@@ -53,7 +45,6 @@ export const issueService = {
     return response.json();
   },
 
-  // ELIMINAR
   delete: async (apiKey, id) => {
     const response = await fetch(`${API_BASE_URL}/issues/${id}`, {
       method: "DELETE",
@@ -62,7 +53,6 @@ export const issueService = {
     return response.ok;
   },
 
-  // BULK INSERT
   bulkInsert: async (apiKey, text) => {
     const response = await fetch(`${API_BASE_URL}/issues/bulk`, {
       method: "POST",
@@ -72,9 +62,6 @@ export const issueService = {
     return response.json();
   },
 
-  // --- MÈTODES D'ADJUNTS (Feature Attachments) ---
-  
-  // llistar els fitxers adjunts d'una issue
   getAttachments: async (apiKey, issueId) => {
     const response = await fetch(`${API_BASE_URL}/issues/${issueId}/attachments`, { 
       headers: getHeaders(apiKey) 
@@ -83,12 +70,9 @@ export const issueService = {
     return response.json();
   },
 
-  // enviar un fitxer adjunt nou
-  // ometem la capçalera content-type perquè el navegador generi el boundary del multipart form-data automàticament
   uploadAttachment: async (apiKey, issueId, file) => {
     const formData = new FormData();
     formData.append("file", file);
-
     const response = await fetch(`${API_BASE_URL}/issues/${issueId}/attachments`, {
       method: "POST",
       headers: {
@@ -100,7 +84,6 @@ export const issueService = {
     if (!response.ok) throw new Error("Error pujant el fitxer");
   },
 
-  // esborrar un fitxer adjunt pel seu id
   deleteAttachment: async (apiKey, attachmentId) => {
     const response = await fetch(`${API_BASE_URL}/attachments/${attachmentId}`, {
       method: "DELETE",
@@ -195,5 +178,14 @@ export const issueService = {
     const res = await fetch(`${API_BASE_URL}/severities`, { headers: getHeaders(apiKey) });
     if (!res.ok) return [];
     return res.json();
+  },
+
+  // --- GESTIÓ DEADLINES ---
+  deleteDeadline: async (apiKey, issueId) => {
+    const response = await fetch(`${API_BASE_URL}/issues/${issueId}/deadline`, {
+      method: "DELETE",
+      headers: getHeaders(apiKey)
+    });
+    return response.ok;
   }
 };
