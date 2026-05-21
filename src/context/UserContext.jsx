@@ -3,7 +3,7 @@ import { issueService } from '../services/issueService';
 
 export const USERS = [
   { id: 4, name: "Sergi", apiKey: "d2a157a572db39ed25cc9ffea7ee1b12" },
-  { id: 2, name: "Victor", apiKey: "TU_API_KEY_AQUI_2" },
+  { id: 2, name: "Victor", apiKey: "a965d68e049cb45e49386312fa7a83b6" },
   { id: 5, name: "Claudia", apiKey: "TU_API_KEY_AQUI_3" },
   { id: 3, name: "Adria", apiKey: "TU_API_KEY_AQUI_4" }
 ];

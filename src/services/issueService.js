@@ -72,6 +72,44 @@ export const issueService = {
     return response.json();
   },
 
+  // --- MÈTODES D'ADJUNTS (Feature Attachments) ---
+  
+  // llistar els fitxers adjunts d'una issue
+  getAttachments: async (apiKey, issueId) => {
+    const response = await fetch(`${API_BASE_URL}/issues/${issueId}/attachments`, { 
+      headers: getHeaders(apiKey) 
+    });
+    if (!response.ok) throw new Error("Error carregant els fitxers adjunts");
+    return response.json();
+  },
+
+  // enviar un fitxer adjunt nou
+  // ometem la capçalera content-type perquè el navegador generi el boundary del multipart form-data automàticament
+  uploadAttachment: async (apiKey, issueId, file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await fetch(`${API_BASE_URL}/issues/${issueId}/attachments`, {
+      method: "POST",
+      headers: {
+        "Accept": "application/json",
+        "X-Api-Key": apiKey
+      },
+      body: formData
+    });
+    if (!response.ok) throw new Error("Error pujant el fitxer");
+  },
+
+  // esborrar un fitxer adjunt pel seu id
+  deleteAttachment: async (apiKey, attachmentId) => {
+    const response = await fetch(`${API_BASE_URL}/attachments/${attachmentId}`, {
+      method: "DELETE",
+      headers: getHeaders(apiKey)
+    });
+    return response.ok;
+  },
+
+
   getStatuses: async (apiKey) => {
     const res = await fetch(`${API_BASE_URL}/statuses`, { headers: getHeaders(apiKey) });
     if (!res.ok) return [];

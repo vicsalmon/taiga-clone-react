@@ -3,34 +3,42 @@ import { UserContext } from '../context/UserContext';
 import { issueService } from '../services/issueService';
 
 export default function IssueDetail({ issueId, onBack, onEdit, onShowNotification }) {
-  // Extraemos también las listas dinámicas
+  // Extraemos las listas dinámicas y datos del usuario actual
   const { currentUser, USERS, statuses, issueTypes, priorities, severities } = useContext(UserContext);
   const [issue, setIssue] = useState(null);
+  const [attachments, setAttachments] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchDetail = async () => {
+    const fetchData = async () => {
       try {
-        const data = await issueService.getById(currentUser.apiKey, issueId);
-        setIssue(data);
+        const issueData = await issueService.getById(currentUser.apiKey, issueId);
+        setIssue(issueData);
+
+        const attachmentsData = await issueService.getAttachments(currentUser.apiKey, issueId);
+        setAttachments(attachmentsData);
       } catch (error) {
-        onShowNotification("Error carregant detall.", "error");
-        onBack();
+        console.error(error);
+        onShowNotification('Error al carregar els detalls de la incidència.', 'error');
       } finally {
         setLoading(false);
       }
     };
-    fetchDetail();
-  }, [issueId, currentUser.apiKey, onBack, onShowNotification]);
+    fetchData();
+  }, [issueId, currentUser.apiKey, onShowNotification]);
 
   const handleDelete = async () => {
-    if (!window.confirm("N'estàs segur que vols eliminar aquesta incidència?")) return;
+    // mantenim el confirm natiu nomes per a accions destructives critiques globals
+    const confirm = window.confirm("N'estàs segur que vols eliminar aquesta incidència? Aquesta acció no es pot desfer.");
+    if (!confirm) return;
+
     try {
       await issueService.delete(currentUser.apiKey, issueId);
-      onShowNotification("Incidència eliminada correctament", "success");
-      onBack();
+      onShowNotification('Incidència eliminada correctament.', 'success');
+      setTimeout(() => onBack(), 1500);
     } catch (error) {
-      onShowNotification("Error a l'eliminar la incidència.", "error");
+      console.error(error);
+      onShowNotification("Error a l'eliminar la incidència.", 'error');
     }
   };
 
@@ -62,18 +70,46 @@ export default function IssueDetail({ issueId, onBack, onEdit, onShowNotificatio
     }
   };
 
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    try {
+      await issueService.uploadAttachment(currentUser.apiKey, issueId, file);
+      const updatedAttachments = await issueService.getAttachments(currentUser.apiKey, issueId);
+      setAttachments(updatedAttachments);
+      e.target.value = null; // Reinicia el input file
+      onShowNotification('Fitxer pujat correctament.', 'success');
+    } catch (error) {
+      console.error(error);
+      onShowNotification('Error pujant el fitxer adjunt.', 'error');
+    }
+  };
+
+  const handleDeleteAttachment = async (attachmentId) => {
+    try {
+      await issueService.deleteAttachment(currentUser.apiKey, attachmentId);
+      setAttachments(attachments.filter(att => att.id !== attachmentId));
+      onShowNotification('Fitxer adjunt eliminat correctament.', 'success');
+    } catch (error) {
+      console.error(error);
+      onShowNotification('Error eliminant el fitxer adjunt.', 'error');
+    }
+  };
+
   // Funciones helper para obtener los nombres visuales
-  const getName = (list, id) => list.find(item => item.id === id)?.name || "Desconegut";
+  const getName = (list, id) => list?.find(item => item.id === id)?.name || "Desconegut";
 
   if (loading) return <div className="panel" style={{textAlign: 'center', padding: '50px'}}>Carregant detall...</div>;
   if (!issue) return null;
 
   return (
     <div className="panel" style={{ maxWidth: '1000px', margin: '0 auto', padding: '30px' }}>
-      <div className="detail-header" style={{ marginBottom: '30px' }}>
+      
+      <div className="detail-header" style={{ marginBottom: '30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div className="detail-title-block">
-          <span className="detail-id">#{issue.id}</span>
-          <h2 className="detail-subject">{issue.subject}</h2>
+          <span className="detail-id" style={{ color: '#888', marginRight: '10px' }}>#{issue.id}</span>
+          <h2 className="detail-subject" style={{ display: 'inline' }}>{issue.subject}</h2>
         </div>
         <div style={{ display: 'flex', gap: '10px' }}>
           <button onClick={() => onEdit(issue)} className="btn btn-neutral">Editar</button>
@@ -82,63 +118,33 @@ export default function IssueDetail({ issueId, onBack, onEdit, onShowNotificatio
         </div>
       </div>
 
-      <div className="detail-grid">
-        <div className="description-panel panel" style={{boxShadow: 'none', border: '1px solid #eee'}}>
-          <h4 style={{ margin: '0 0 15px 0', color: 'var(--primary)', textTransform: 'uppercase', fontSize: '13px' }}>Descripció</h4>
-          <p style={{ whiteSpace: 'pre-wrap', margin: 0, fontSize: '15px', lineHeight: '1.6' }}>
-            {issue.description || <em style={{color: '#aaa'}}>Sense descripció ampliada...</em>}
-          </p>
-        </div>
+      <div className="detail-grid" style={{ display: 'flex', gap: '40px' }}>
+        
+        {/* COLUMNA PRINCIPAL (Descripción + Adjuntos) */}
+        <div style={{ flex: 2, display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div className="description-panel panel" style={{boxShadow: 'none', border: '1px solid #eee', padding: '20px', borderRadius: '5px'}}>
+            <h4 style={{ margin: '0 0 15px 0', color: 'var(--primary)', textTransform: 'uppercase', fontSize: '13px' }}>Descripció</h4>
+            <p style={{ whiteSpace: 'pre-wrap', margin: 0, fontSize: '15px', lineHeight: '1.6' }}>
+              {issue.description || <em style={{color: '#aaa'}}>Sense descripció ampliada...</em>}
+            </p>
+          </div>
 
-        <div className="sidebar-panel" style={{ background: '#f8f9fa', padding: '25px', borderRadius: '6px', border: '1px solid #eee', alignSelf: 'start' }}>
-          <h4 style={{ fontSize: '12px', textTransform: 'uppercase', color: '#888', borderBottom: '1px solid #ddd', paddingBottom: '10px', marginBottom: '20px', marginTop: 0 }}>
-            Atributs
-          </h4>
-
-          <div className="meta-item" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '5px' }}>
-            <span className="meta-label">Assignat a</span>
-            <select 
-              value={issue.assigned_to_id || ""} 
-              onChange={handleAssign} 
-              style={{ width: '100%', padding: '8px' }}
-            >
-              <option value="">Sense assignar</option>
-              {USERS.map((u) => (
-                <option key={u.id} value={u.id}>{u.name}</option>
+          <div className="attachments-panel panel" style={{boxShadow: 'none', border: '1px solid #eee', padding: '20px', borderRadius: '5px'}}>
+            <h4 style={{ margin: '0 0 15px 0', color: 'var(--primary)', textTransform: 'uppercase', fontSize: '13px' }}>Fitxers Adjunts</h4>
+            
+            <ul style={{ listStyleType: 'none', padding: 0, margin: '0 0 15px 0' }}>
+              {attachments.map(att => (
+                <li key={att.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', padding: '10px', background: '#f8f9fa', border: '1px solid #eee', borderRadius: '4px' }}>
+                  <a href={att.url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: '#0052cc', wordBreak: 'break-all', fontSize: '14px' }}>
+                    {att.filename} ({Math.round(att.byte_size / 1024)} KB)
+                  </a>
+                  <button onClick={() => handleDeleteAttachment(att.id)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#e34935', padding: '5px', fontSize: '14px' }}>
+                    ❌
+                  </button>
+                </li>
               ))}
-            </select>
-          </div>
+              {attachments.length === 0 && <p style={{ fontSize: '14px', color: '#888', margin: 0 }}>No hi ha cap fitxer adjunt.</p>}
+            </ul>
 
-          <div className="meta-item">
-            <span className="meta-label">Tipus:</span>
-            <span style={{fontWeight: '500'}}>{getName(issueTypes, issue.issue_type_id)}</span>
-          </div>
-
-          <div className="meta-item">
-            <span className="meta-label">Estat:</span>
-            <span style={{fontWeight: '500', background: '#e4e6ea', padding: '2px 8px', borderRadius: '10px', fontSize: '12px'}}>
-              {getName(statuses, issue.status_id)}
-            </span>
-          </div>
-
-          <div className="meta-item">
-            <span className="meta-label">Prioritat:</span>
-            <span>{getName(priorities, issue.priority_id)}</span>
-          </div>
-
-          <div className="meta-item">
-            <span className="meta-label">Severitat:</span>
-            <span>{getName(severities, issue.severity_id)}</span>
-          </div>
-
-          <div className="meta-item" style={{ borderTop: '1px solid #eee', paddingTop: '15px', marginTop: '15px' }}>
-            <span className="meta-label">Data Límit:</span>
-            <span style={{ color: issue.deadline ? '#333' : '#aaa' }}>
-              {issue.deadline ? new Date(issue.deadline).toLocaleDateString() : "Sense especificar"}
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+            <div>
+              <input type="file" onChange={handleFileUpload} style={{ fontSize: '14px' }} />
