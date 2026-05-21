@@ -1,16 +1,36 @@
-# React + Vite
+# Taiga Clone - Client Web (React + Vite)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Aquest repositori conté el **Front-end** desenvolupat amb **React** per al Tercer Lliurament de l'assignatura **ASW**. L'aplicació és un client web responsive que consumeix l'API REST de Ruby on Rails implementada en el lliurament anterior.
 
-Currently, two official plugins are available:
+##  Requisits previs
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Abans de començar, assegura't de tenir instal·lat:
+*   [Node.js](https://nodejs.org/) (Versió 18 o superior recomanada)
+*   **npm** 
+*   **Git**
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+##  Guia de posada en marxa
 
-## Expanding the ESLint configuration
+Segueix aquests passos per configurar i executar el projecte localment:
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### 1. Clonar el repositori
+Obre la terminal i executa:
+
+```bash
+git clone https://github.com/asw2526q2-it212/Frontend_ASW_Taiga_Project.git
+cd Frontend_ASW_Taiga_Project
+
+### 2. Instal·lar dependències
+
+npm install
+
+### 3. Crear .env i afegir url del backend
+VITE_API_URL=https://taiga-app.onrender.com/api/v1
+
+---
+
+## Desenvolupament local 
+
+npm run dev
