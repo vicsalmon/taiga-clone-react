@@ -24,6 +24,8 @@ export default function IssueList({ onNavigateToBulk, onNavigateToCreate, onView
     }
   };
 
+  const getName = (list, id) => list.find(item => item.id === id)?.name || "-";
+
   useEffect(() => {
     fetchIssues();
   }, [currentUser, filters.query, filters.sort, filters.direction, filters.type, filters.status, filters.priority, filters.severity]);
@@ -145,37 +147,41 @@ export default function IssueList({ onNavigateToBulk, onNavigateToCreate, onView
       {loading ? (
         <div style={{textAlign: 'center', padding: '60px', color: '#888'}}>Carregant dades...</div>
       ) : (
-        <table className="taiga-table" style={{ boxShadow: 'none', border: '1px solid #eaeaea', width: '100%', borderCollapse: 'collapse' }}>
+        <table className="taiga-table" style={{ boxShadow: 'none', border: '1px solid #eaeaea', width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
           <thead>
             <tr style={{ background: '#f8f9fa' }}>
-              <th style={{ width: '80px', textAlign: 'center', padding: '10px', borderBottom: '2px solid #eee' }}>ID</th>
-              <th style={{ padding: '10px', borderBottom: '2px solid #eee', textAlign: 'left' }}>Assumpte</th>
-              <th style={{ width: '150px', padding: '10px', borderBottom: '2px solid #eee', textAlign: 'left' }}>Estat</th>
-              <th style={{ width: '200px', padding: '10px', borderBottom: '2px solid #eee', textAlign: 'left' }}>Assignat a</th>
+              <th style={{ width: '50px', textAlign: 'center', padding: '10px', borderBottom: '2px solid #eee' }}>ID</th>
+              <th style={{ padding: '10px', borderBottom: '2px solid #eee' }}>Assumpte</th>
+              <th style={{ padding: '10px', borderBottom: '2px solid #eee' }}>Estat</th>
+              <th style={{ padding: '10px', borderBottom: '2px solid #eee' }}>Tipus</th>
+              <th style={{ padding: '10px', borderBottom: '2px solid #eee' }}>Prioritat</th>
+              <th style={{ padding: '10px', borderBottom: '2px solid #eee' }}>Severitat</th>
+              <th style={{ padding: '10px', borderBottom: '2px solid #eee' }}>Deadline</th>
+              <th style={{ padding: '10px', borderBottom: '2px solid #eee' }}>Creador</th>
+              <th style={{ padding: '10px', borderBottom: '2px solid #eee' }}>Assignat</th>
             </tr>
           </thead>
           <tbody>
             {issues.map((issue, index) => (
               <tr key={issue.id || `issue-${index}`} style={{ cursor: 'default' }}>
-                <td style={{ textAlign: 'center', color: '#888', fontWeight: '500', padding: '10px', borderBottom: '1px solid #eee' }}>#{issue.id || index}</td>
+                <td style={{ textAlign: 'center', color: '#888', padding: '10px', borderBottom: '1px solid #eee' }}>#{issue.id || index}</td>
                 <td style={{ padding: '10px', borderBottom: '1px solid #eee' }}>
                   <span 
                     onClick={() => onViewDetail(issue.id)} 
-                    style={{ fontWeight: '600', color: 'var(--primary)', cursor: 'pointer', textDecoration: 'none', fontSize: '15px' }}
-                    onMouseEnter={(e) => e.target.style.textDecoration = 'underline'}
-                    onMouseLeave={(e) => e.target.style.textDecoration = 'none'}
+                    style={{ fontWeight: '600', color: 'var(--primary)', cursor: 'pointer' }}
                   >
                     {issue.subject}
                   </span>
                 </td>
+                <td style={{ padding: '10px', borderBottom: '1px solid #eee' }}>{getName(statuses, issue.status_id)}</td>
+                <td style={{ padding: '10px', borderBottom: '1px solid #eee' }}>{getName(issueTypes, issue.issue_type_id)}</td>
+                <td style={{ padding: '10px', borderBottom: '1px solid #eee' }}>{getName(priorities, issue.priority_id)}</td>
+                <td style={{ padding: '10px', borderBottom: '1px solid #eee' }}>{getName(severities, issue.severity_id)}</td>
                 <td style={{ padding: '10px', borderBottom: '1px solid #eee' }}>
-                  <span style={{background: '#f0f0f0', color: '#555', padding: '4px 12px', borderRadius: '15px', fontSize: '12px', fontWeight: '600'}}>
-                    {getStatusName(issue.status_id)}
-                  </span>
+                  {issue.deadline ? new Date(issue.deadline).toLocaleDateString() : "-"}
                 </td>
-                <td style={{ color: issue.assigned_to_id ? '#333' : '#aaa', fontSize: '14px', padding: '10px', borderBottom: '1px solid #eee' }}>
-                  {getUserNameById(issue.assigned_to_id)}
-                </td>
+                <td style={{ padding: '10px', borderBottom: '1px solid #eee' }}>{getUserNameById(issue.user_id)}</td>
+                <td style={{ padding: '10px', borderBottom: '1px solid #eee' }}>{getUserNameById(issue.assigned_to_id)}</td>
               </tr>
             ))}
           </tbody>
