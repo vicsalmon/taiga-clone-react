@@ -4,64 +4,40 @@ import { issueService } from '../services/issueService';
 
 export default function BulkInsert({ onBack }) {
   const { currentUser } = useContext(UserContext);
-  
-  // Guardamos el texto crudo del textarea
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!text.trim()) return; // Evitamos enviar envíos vacíos
-
-    setLoading(true);
-    setMessage(null);
+    if (!text.trim()) return;
+    setLoading(true); setMessage(null);
 
     try {
-      // Llamamos al servicio que creamos, pasándole la API Key del usuario actual y el texto
       const response = await issueService.bulkInsert(currentUser.apiKey, text);
-      
-      setMessage({ type: 'success', text: response.message || "Incidències creades correctament!" });
-      setText(""); // Limpiamos el cuadro tras el éxito
-      
-      // Opcional: Volver al listado después de 2 segundos
-      setTimeout(() => {
-        if(onBack) onBack();
-      }, 2000);
-
+      setMessage({ type: 'success', text: response.message || "Creats correctament!" });
+      setText("");
+      setTimeout(() => { if(onBack) onBack(); }, 2000);
     } catch (error) {
-      console.error(error);
-      setMessage({ type: 'error', text: "Error: No s'han pogut crear les incidències. Comprova el format." });
+      setMessage({ type: 'error', text: "Error en la inserció massiva." });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={{ padding: '20px', fontFamily: 'sans-serif', maxWidth: '800px', margin: '0 auto' }}>
-      
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h2>Inserció Massiva (Bulk Insert)</h2>
-        <button 
-          onClick={onBack} 
-          style={{ padding: '5px 15px', cursor: 'pointer', background: '#ccc', border: 'none' }}
-        >
-          Volver a la Lista
-        </button>
+    <div className="panel form-container">
+      <div className="form-header">
+        <h2>Inserció Massiva (Bulk)</h2>
+        <button onClick={onBack} className="btn btn-secondary">Volver</button>
       </div>
 
-      <p style={{ color: '#555' }}>
-        Introdueix un títol per línia. Cada línia crearà una incidència nova amb els valors per defecte.
+      <p style={{ color: '#666', marginBottom: '20px', fontSize: '14px' }}>
+        Afegeix <strong>un títol per línia</strong>. El sistema crearà una incidència per cada línia amb els valors per defecte de Taiga.
       </p>
 
       {message && (
-        <div style={{ 
-          padding: '10px', 
-          marginBottom: '15px', 
-          background: message.type === 'success' ? '#d4edda' : '#f8d7da',
-          color: message.type === 'success' ? '#155724' : '#721c24',
-          borderRadius: '4px'
-        }}>
+        <div className={`alert alert-${message.type === 'success' ? 'success' : 'danger'}`}>
           {message.text}
         </div>
       )}
@@ -70,31 +46,13 @@ export default function BulkInsert({ onBack }) {
         <textarea 
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Falta el botó de login&#10;La imatge no carrega&#10;Cal actualitzar la base de dades"
-          style={{ 
-            width: '100%', 
-            height: '250px', 
-            padding: '10px', 
-            fontFamily: 'monospace',
-            marginBottom: '15px',
-            resize: 'vertical'
-          }}
+          placeholder="Ej:&#10;Falta botó Login&#10;Error 500 en perfil&#10;Actualitzar logos"
+          style={{ height: '300px', fontFamily: 'monospace', fontSize: '13px' }}
           disabled={loading}
         />
         
-        <button 
-          type="submit" 
-          disabled={loading || !text.trim()}
-          style={{ 
-            background: loading ? '#ccc' : '#222', 
-            color: 'white', 
-            border: 'none', 
-            padding: '10px 20px', 
-            cursor: loading ? 'not-allowed' : 'pointer',
-            fontSize: '16px'
-          }}
-        >
-          {loading ? 'Creant...' : 'Crear Totes les Incidències'}
+        <button type="submit" disabled={loading || !text.trim()} className="btn btn-neutral" style={{width: '100%', padding: '15px'}}>
+          {loading ? 'Processant...' : 'Crear Totes les Incidències'}
         </button>
       </form>
     </div>

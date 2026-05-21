@@ -3,15 +3,21 @@ import IssueList from './components/IssueList';
 import BulkInsert from './components/BulkInsert';
 import IssueForm from './components/IssueForm';
 import IssueDetail from './components/IssueDetail';
+import Toast from './components/Toast';
 import './App.css';
 
 function App() {
   const [currentView, setCurrentView] = useState('list');
-  
-  // Guardamos la ID de la issue seleccionada para el detalle, o el objeto entero para editar
   const [selectedIssue, setSelectedIssue] = useState(null);
+  
+  // Estado para la notificación flotante
+  const [toast, setToast] = useState({ message: '', type: '' });
 
-  // Funciones de navegación
+  // Función global para mostrar el mensaje
+  const showNotification = (message, type = 'success') => {
+    setToast({ message, type });
+  };
+
   const goToList = () => {
     setSelectedIssue(null);
     setCurrentView('list');
@@ -34,18 +40,23 @@ function App() {
         <IssueList 
           onNavigateToBulk={() => setCurrentView('bulk')}
           onNavigateToCreate={() => { setSelectedIssue(null); setCurrentView('form'); }}
-          onViewDetail={goToDetail} // <--- Nueva prop para la lista
+          onViewDetail={goToDetail}
+          onShowNotification={showNotification}
         />
       )}
 
       {currentView === 'bulk' && (
-        <BulkInsert onBack={goToList} />
+        <BulkInsert 
+          onBack={goToList} 
+          onShowNotification={showNotification}
+        />
       )}
 
       {currentView === 'form' && (
         <IssueForm 
           onBack={goToList} 
-          issueToEdit={selectedIssue} // Si es null crea, si hay objeto edita
+          issueToEdit={selectedIssue} 
+          onShowNotification={showNotification} 
         />
       )}
 
@@ -54,8 +65,16 @@ function App() {
           issueId={selectedIssue}
           onBack={goToList}
           onEdit={goToEdit}
+          onShowNotification={showNotification}
         />
       )}
+
+      {/* Componente que se encarga de pintar la notificación si existe */}
+      <Toast 
+        message={toast.message} 
+        type={toast.type} 
+        onClose={() => setToast({ message: '', type: '' })} 
+      />
 
     </div>
   );
