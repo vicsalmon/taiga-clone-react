@@ -19,6 +19,7 @@ export default function IssueDetail({ issueId, onBack, onEdit, onShowNotificatio
   const [commentsError, setCommentsError] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Funciones de obtención de datos
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -46,10 +47,7 @@ export default function IssueDetail({ issueId, onBack, onEdit, onShowNotificatio
         setCommentsError('Error al carregar els comentaris.');
       }
     };
-
-    if (issueId) {
-      fetchComments();
-    }
+    if (issueId) fetchComments();
   }, [issueId, currentUser.apiKey]);
 
   const fetchWatchers = async () => {
@@ -63,56 +61,33 @@ export default function IssueDetail({ issueId, onBack, onEdit, onShowNotificatio
   };
 
   useEffect(() => {
-    if (issueId) {
-      fetchWatchers();
-    }
+    if (issueId) fetchWatchers();
   }, [issueId, currentUser.apiKey]);
 
+  // Helpers de permisos y visualización
   const isIssueOwner = issue && parseInt(issue.user_id, 10) === currentUser.id;
-
-  const getCommentOwnerId = (comment) => {
-    return parseInt(comment.created_by?.id || comment.user?.id || comment.author?.id || comment.user_id || comment.author?.user_id || 0, 10);
-  };
-
+  
+  const getCommentOwnerId = (comment) => parseInt(comment.created_by?.id || comment.user?.id || comment.author?.id || comment.user_id || comment.author?.user_id || 0, 10);
   const isCommentOwner = (comment) => getCommentOwnerId(comment) === currentUser.id;
-
-  const getWatcherId = (watcher) => {
-    return parseInt(
-      watcher.id || watcher.user?.id || watcher.user_id || watcher.watcher_id || watcher.user?.user_id || 0,
-      10
-    );
-  };
-
+  
+  const getWatcherId = (watcher) => parseInt(watcher.id || watcher.user?.id || watcher.user_id || watcher.watcher_id || watcher.user?.user_id || 0, 10);
+  
   const getWatcherName = (watcher) => {
     const watcherName = watcher.full_name || watcher.name || watcher.username || watcher.user?.name || watcher.user?.full_name || watcher.user?.username;
     if (watcherName) return watcherName;
-
-    const watcherId = getWatcherId(watcher);
-    const user = USERS.find((u) => u.id === watcherId);
+    const user = USERS.find((u) => u.id === getWatcherId(watcher));
     return user ? user.name : 'Usuari desconegut';
   };
 
-  const getCommentAuthor = (comment) => {
-    return comment.created_by?.full_name || comment.user?.name || comment.author?.username || 'Usuari desconegut';
-  };
+  const getCommentAuthor = (comment) => comment.created_by?.full_name || comment.user?.name || comment.author?.username || 'Usuari desconegut';
+  const getName = (list, id) => list?.find(item => item.id === id)?.name || "-";
+  const getColor = (list, id) => list?.find(item => item.id === id)?.color || "#6b7280";
+  const getUserNameById = (id) => USERS.find((u) => u.id === parseInt(id))?.name || "Sense assignar";
 
-  const startEditComment = (comment) => {
-    setCurrentEditId(comment.id);
-    setEditCommentText(comment.content || '');
-  };
-
-  const cancelEditComment = () => {
-    setCurrentEditId(null);
-    setEditCommentText('');
-  };
-
+  // Watchers handlers
   const handleAddWatcher = async () => {
     const watcherId = parseInt(watcherToAdd, 10);
-    if (!watcherId) {
-      onShowNotification('Selecciona un usuari per afegir com a watcher.', 'error');
-      return;
-    }
-
+    if (!watcherId) return onShowNotification('Selecciona un usuari.', 'error');
     try {
       setWatchersLoading(true);
       await issueService.addWatcher(currentUser.apiKey, issueId, { user_id: watcherId });
@@ -120,7 +95,6 @@ export default function IssueDetail({ issueId, onBack, onEdit, onShowNotificatio
       setWatcherToAdd('');
       onShowNotification('Watcher afegit.', 'success');
     } catch (error) {
-      console.error(error);
       onShowNotification('Error afegint el watcher.', 'error');
     } finally {
       setWatchersLoading(false);
@@ -128,67 +102,23 @@ export default function IssueDetail({ issueId, onBack, onEdit, onShowNotificatio
   };
 
   const handleRemoveWatcher = async (watcherId) => {
-    const confirmRemove = window.confirm('Segur que vols eliminar aquest watcher?');
-    if (!confirmRemove) return;
-
+    if (!window.confirm('Segur que vols eliminar aquest watcher?')) return;
     try {
       setWatchersLoading(true);
-      const removed = await issueService.removeWatcher(currentUser.apiKey, issueId, watcherId);
-      if (!removed) throw new Error('No s ha pogut eliminar');
-      setWatchers((prev) => prev.filter((watcher) => getWatcherId(watcher) !== watcherId));
+      await issueService.removeWatcher(currentUser.apiKey, issueId, watcherId);
+      setWatchers((prev) => prev.filter((w) => getWatcherId(w) !== watcherId));
       onShowNotification('Watcher eliminat.', 'success');
     } catch (error) {
-      console.error(error);
       onShowNotification('Error eliminant el watcher.', 'error');
     } finally {
       setWatchersLoading(false);
     }
   };
 
-  const handleUpdateComment = async (commentId) => {
-    const trimmedText = editCommentText.trim();
-    if (!trimmedText) {
-      onShowNotification('El comentari no pot estar buit.', 'error');
-      return;
-    }
-
-    try {
-      setEditLoading(true);
-      const updatedComment = await issueService.updateComment(currentUser.apiKey, commentId, { content: trimmedText });
-      setComments(comments.map(comment => comment.id === commentId ? updatedComment : comment));
-      setCurrentEditId(null);
-      setEditCommentText('');
-      onShowNotification('Comentari actualitzat.', 'success');
-    } catch (error) {
-      console.error(error);
-      onShowNotification('Error actualitzant el comentari.', 'error');
-    } finally {
-      setEditLoading(false);
-    }
-  };
-
-  const handleDeleteComment = async (commentId) => {
-    const confirmDelete = window.confirm('Segur que vols eliminar aquest comentari?');
-    if (!confirmDelete) return;
-
-    try {
-      const deleted = await issueService.deleteComment(currentUser.apiKey, commentId);
-      if (!deleted) throw new Error('No s ha pogut eliminar');
-      setComments(comments.filter(comment => comment.id !== commentId));
-      onShowNotification('Comentari eliminat.', 'success');
-    } catch (error) {
-      console.error(error);
-      onShowNotification('Error eliminant el comentari.', 'error');
-    }
-  };
-
+  // Comentarios handlers
   const handleAddComment = async () => {
     const trimmedText = commentText.trim();
-    if (!trimmedText) {
-      onShowNotification('El comentari no pot estar buit.', 'error');
-      return;
-    }
-
+    if (!trimmedText) return onShowNotification('El comentari no pot estar buit.', 'error');
     try {
       setCommentLoading(true);
       const newComment = await issueService.addComment(currentUser.apiKey, issueId, { content: trimmedText });
@@ -196,33 +126,56 @@ export default function IssueDetail({ issueId, onBack, onEdit, onShowNotificatio
       setCommentText('');
       onShowNotification('Comentari afegit amb èxit.', 'success');
     } catch (error) {
-      console.error(error);
       onShowNotification('Error afegint el comentari.', 'error');
     } finally {
       setCommentLoading(false);
     }
   };
 
-  const handleDelete = async () => {
-    const confirm = window.confirm("N'estàs segur que vols eliminar aquesta incidència? Aquesta acció no es pot desfer.");
-    if (!confirm) return;
+  const handleUpdateComment = async (commentId) => {
+    const trimmedText = editCommentText.trim();
+    if (!trimmedText) return onShowNotification('El comentari no pot estar buit.', 'error');
+    try {
+      setEditLoading(true);
+      const updatedComment = await issueService.updateComment(currentUser.apiKey, commentId, { content: trimmedText });
+      setComments(comments.map(c => c.id === commentId ? updatedComment : c));
+      setCurrentEditId(null);
+      setEditCommentText('');
+      onShowNotification('Comentari actualitzat.', 'success');
+    } catch (error) {
+      onShowNotification('Error actualitzant el comentari.', 'error');
+    } finally {
+      setEditLoading(false);
+    }
+  };
 
+  const handleDeleteComment = async (commentId) => {
+    if (!window.confirm('Segur que vols eliminar aquest comentari?')) return;
+    try {
+      await issueService.deleteComment(currentUser.apiKey, commentId);
+      setComments(comments.filter(c => c.id !== commentId));
+      onShowNotification('Comentari eliminat.', 'success');
+    } catch (error) {
+      onShowNotification('Error eliminant el comentari.', 'error');
+    }
+  };
+
+  // Issue global actions
+  const handleDelete = async () => {
+    if (!window.confirm("N'estàs segur que vols eliminar aquesta incidència? Aquesta acció no es pot desfer.")) return;
     try {
       await issueService.delete(currentUser.apiKey, issueId);
       onShowNotification('Incidència eliminada correctament.', 'success');
       setTimeout(() => onBack(), 1500);
     } catch (error) {
-      console.error(error);
       onShowNotification("Error a l'eliminar la incidència.", 'error');
     }
   };
 
   const handleAssign = async (e) => {
     if (!issue) return; 
-
     const rawValue = e.target.value;
     const newAssigneeId = (rawValue === "" || rawValue === "undefined") ? null : parseInt(rawValue, 10);
-    
     try {
       const payload = {
         subject: issue.subject,
@@ -233,22 +186,19 @@ export default function IssueDetail({ issueId, onBack, onEdit, onShowNotificatio
         issue_type_id: parseInt(issue.issue_type_id, 10),
         assigned_to_id: newAssigneeId
       };
-
       if (issue.deadline) payload.deadline = issue.deadline;
-
       const updatedIssue = await issueService.update(currentUser.apiKey, issueId, payload);
       setIssue(updatedIssue);
       onShowNotification("Assignació actualitzada", "success");
     } catch (error) {
-      console.error(error);
       onShowNotification("Error canviant assignació.", "error");
     }
   };
 
+  // Archivos & Deadline
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
     try {
       await issueService.uploadAttachment(currentUser.apiKey, issueId, file);
       const updatedAttachments = await issueService.getAttachments(currentUser.apiKey, issueId);
@@ -256,7 +206,6 @@ export default function IssueDetail({ issueId, onBack, onEdit, onShowNotificatio
       e.target.value = null;
       onShowNotification('Fitxer pujat correctament.', 'success');
     } catch (error) {
-      console.error(error);
       onShowNotification('Error pujant el fitxer adjunt.', 'error');
     }
   };
@@ -267,7 +216,6 @@ export default function IssueDetail({ issueId, onBack, onEdit, onShowNotificatio
       setAttachments(attachments.filter(att => att.id !== attachmentId));
       onShowNotification('Fitxer adjunt eliminat correctament.', 'success');
     } catch (error) {
-      console.error(error);
       onShowNotification('Error eliminant el fitxer adjunt.', 'error');
     }
   };
@@ -278,264 +226,305 @@ export default function IssueDetail({ issueId, onBack, onEdit, onShowNotificatio
       setIssue(prev => ({ ...prev, deadline: null }));
       onShowNotification('Data límit eliminada.', 'success');
     } catch (error) {
-      console.error(error);
       onShowNotification('Error eliminant la data límit.', 'error');
     }
   };
 
-  const getName = (list, id) => list?.find(item => item.id === id)?.name || "Desconegut";
-
-  if (loading) return <div className="panel" style={{textAlign: 'center', padding: '50px'}}>Carregant detall...</div>;
+  if (loading) return <div className="text-center py-20 text-gray-500 font-[Inter]"><span className="material-symbols-outlined text-4xl animate-spin text-gray-300">refresh</span><p>Carregant detall...</p></div>;
   if (!issue) return null;
 
-  return (
-    <div className="panel" style={{ maxWidth: '1000px', margin: '0 auto', padding: '30px' }}>
-      <div className="detail-header" style={{ marginBottom: '30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div className="detail-title-block">
-          <span className="detail-id" style={{ color: '#888', marginRight: '10px' }}>#{issue.id}</span>
-          <h2 className="detail-subject" style={{ display: 'inline' }}>{issue.subject}</h2>
-        </div>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button onClick={() => onEdit(issue)} className="btn btn-neutral">Editar</button>
-          <button onClick={handleDelete} className="btn btn-danger">Eliminar</button>
-          <button onClick={onBack} className="btn btn-secondary">Tornar</button>
-        </div>
-      </div>
+  // Variables calculadas para UI
+  const statusColor = getColor(statuses, issue.status_id);
+  const priorityColor = getColor(priorities, issue.priority_id);
+  const severityColor = getColor(severities, issue.severity_id);
 
-      <div className="detail-grid" style={{ display: 'flex', gap: '40px' }}>
-        <div style={{ flex: 2, display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <div className="description-panel panel" style={{boxShadow: 'none', border: '1px solid #eee', padding: '20px', borderRadius: '5px'}}>
-            <h4 style={{ margin: '0 0 15px 0', color: 'var(--primary)', textTransform: 'uppercase', fontSize: '13px' }}>Descripció</h4>
-            <p style={{ whiteSpace: 'pre-wrap', margin: 0, fontSize: '15px', lineHeight: '1.6' }}>
-              {issue.description || <em style={{color: '#aaa'}}>Sense descripció ampliada...</em>}
+  return (
+    <div className="bg-gray-50 min-h-screen font-[Inter]">
+      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 py-8 flex flex-col">
+        
+        {/* Header Actions */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+              <span className="text-gray-400">#{issue.id}</span> {issue.subject}
+            </h1>
+            <p className="text-gray-500 text-sm mt-1">
+              Creat per {getUserNameById(issue.user_id)} el {new Date(issue.created_at || Date.now()).toLocaleDateString('ca-ES')}
             </p>
           </div>
-
-          <div className="attachments-panel panel" style={{boxShadow: 'none', border: '1px solid #eee', padding: '20px', borderRadius: '5px'}}>
-            <h4 style={{ margin: '0 0 15px 0', color: 'var(--primary)', textTransform: 'uppercase', fontSize: '13px' }}>Fitxers Adjunts</h4>
-            <ul style={{ listStyleType: 'none', padding: 0, margin: '0 0 15px 0' }}>
-              {attachments.map(att => (
-                <li key={att.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', padding: '10px', background: '#f8f9fa', border: '1px solid #eee', borderRadius: '4px' }}>
-                  <a href={att.url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: '#0052cc', wordBreak: 'break-all', fontSize: '14px' }}>
-                    {att.filename} ({Math.round(att.byte_size / 1024)} KB)
-                  </a>
-                  <button onClick={() => handleDeleteAttachment(att.id)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#e34935', padding: '5px', fontSize: '14px' }}>
-                    ❌
-                  </button>
-                </li>
-              ))}
-              {attachments.length === 0 && <p style={{ fontSize: '14px', color: '#888', margin: 0 }}>No hi ha cap fitxer adjunt.</p>}
-            </ul>
-            <div>
-              <input type="file" onChange={handleFileUpload} style={{ fontSize: '14px' }} />
-            </div>
-          </div>
-
-          <div className="comments-panel panel" style={{ boxShadow: 'none', border: '1px solid #eee', padding: '20px', borderRadius: '5px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-              <h4 style={{ margin: 0, color: 'var(--primary)', textTransform: 'uppercase', fontSize: '13px' }}>Comentaris</h4>
-              <span style={{ fontSize: '12px', color: '#888' }}>{comments.length} comentari{comments.length === 1 ? '' : 's'}</span>
-            </div>
-
-            <div style={{ marginBottom: '20px' }}>
-              <textarea
-                value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
-                rows={4}
-                placeholder="Escriu aquí el teu comentari..."
-                style={{ width: '100%', minHeight: '100px', padding: '14px', borderRadius: '6px', border: '1px solid #d8dde4', resize: 'vertical', fontSize: '14px', color: '#333' }}
-              />
-              <button
-                onClick={handleAddComment}
-                disabled={commentLoading}
-                className="btn btn-primary"
-                style={{ marginTop: '12px' }}
-              >
-                {commentLoading ? 'Afegint...' : 'Afegir comentari'}
-              </button>
-            </div>
-
-            {commentsError && <p style={{ color: '#d23669', fontSize: '13px', marginBottom: '15px' }}>{commentsError}</p>}
-
-            {comments.length === 0 ? (
-              <p style={{ fontSize: '14px', color: '#666', margin: 0 }}>Encara no hi ha cap comentari en aquesta issue.</p>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {comments.map(comment => (
-                  <div key={comment.id} style={{ background: '#fff', border: '1px solid #e6ecf1', borderRadius: '6px', padding: '16px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px', marginBottom: '12px' }}>
-                      <div>
-                        <div style={{ fontSize: '13px', fontWeight: '700', color: '#2f4359' }}>{getCommentAuthor(comment)}</div>
-                        <div style={{ fontSize: '12px', color: '#888' }}>{new Date(comment.created_at).toLocaleString('ca-ES')}</div>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span style={{ fontSize: '12px', color: '#60768f', background: '#eef3f8', padding: '4px 10px', borderRadius: '999px' }}>#{issue.id}</span>
-                        {isIssueOwner && (
-                          <button
-                            onClick={() => handleDeleteComment(comment.id)}
-                            style={{
-                              background: 'transparent',
-                              border: '1px solid #e34935',
-                              color: '#e34935',
-                              borderRadius: '5px',
-                              padding: '6px 10px',
-                              cursor: 'pointer',
-                              fontSize: '12px'
-                            }}
-                          >
-                            Eliminar
-                          </button>
-                        )}
-                        {isCommentOwner(comment) && currentEditId !== comment.id && (
-                          <button
-                            onClick={() => startEditComment(comment)}
-                            style={{
-                              background: 'transparent',
-                              border: '1px solid #4c8bf5',
-                              color: '#4c8bf5',
-                              borderRadius: '5px',
-                              padding: '6px 10px',
-                              cursor: 'pointer',
-                              fontSize: '12px'
-                            }}
-                          >
-                            Editar
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                    {currentEditId === comment.id ? (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                        <textarea
-                          value={editCommentText}
-                          onChange={(e) => setEditCommentText(e.target.value)}
-                          rows={4}
-                          style={{ width: '100%', padding: '12px', borderRadius: '6px', border: '1px solid #d8dde4', fontSize: '14px', resize: 'vertical' }}
-                        />
-                        <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-                          <button
-                            onClick={cancelEditComment}
-                            style={{ background: 'transparent', border: '1px solid #bbb', color: '#555', borderRadius: '5px', padding: '8px 12px', cursor: 'pointer' }}
-                          >
-                            Cancel·lar
-                          </button>
-                          <button
-                            onClick={() => handleUpdateComment(comment.id)}
-                            disabled={editLoading}
-                            className="btn btn-primary"
-                            style={{ padding: '8px 14px' }}
-                          >
-                            {editLoading ? 'Guardant...' : 'Guardar'}
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <p style={{ margin: 0, fontSize: '15px', lineHeight: '1.7', color: '#333' }}>{comment.content}</p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
+          <div className="flex items-center gap-3 flex-wrap">
+            <button onClick={onBack} className="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors flex items-center gap-2 shadow-sm">
+              <span className="material-symbols-outlined text-[18px]">arrow_back</span> Tornar
+            </button>
+            <button onClick={() => onEdit(issue)} className="px-4 py-2 bg-gray-800 text-white rounded-lg text-sm font-semibold hover:bg-gray-900 transition-colors flex items-center gap-2 shadow-sm">
+              <span className="material-symbols-outlined text-[18px]">edit</span> Editar
+            </button>
+            <button onClick={handleDelete} className="px-4 py-2 bg-red-50 text-red-600 border border-red-200 rounded-lg text-sm font-semibold hover:bg-red-100 transition-colors flex items-center gap-2 shadow-sm">
+              <span className="material-symbols-outlined text-[18px]">delete</span> Eliminar
+            </button>
           </div>
         </div>
 
-        <div className="sidebar-panel" style={{ background: '#f8f9fa', padding: '25px', borderRadius: '6px', border: '1px solid #eee', alignSelf: 'start', flex: 1 }}>
-          <h4 style={{ fontSize: '12px', textTransform: 'uppercase', color: '#888', borderBottom: '1px solid #ddd', paddingBottom: '10px', marginBottom: '20px', marginTop: 0 }}>
-            Atributs
-          </h4>
-          <div className="meta-item" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '5px', marginBottom: '15px' }}>
-            <span className="meta-label" style={{ fontWeight: 'bold', fontSize: '14px' }}>Assignat a</span>
-            <select 
-              value={issue.assigned_to_id || ""} 
-              onChange={handleAssign} 
-              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-            >
-              <option value="">Sense assignar</option>
-              {USERS.map((u) => (
-                <option key={u.id} value={u.id}>{u.name}</option>
-              ))}
-            </select>
-          </div>
-          <div className="meta-item" style={{ marginBottom: '15px' }}>
-            <span className="meta-label" style={{ fontWeight: 'bold', fontSize: '14px' }}>Tipus:</span>
-            <span style={{fontWeight: '500', marginLeft: '10px'}}>{getName(issueTypes, issue.issue_type_id)}</span>
-          </div>
-          <div className="meta-item" style={{ marginBottom: '15px' }}>
-            <span className="meta-label" style={{ fontWeight: 'bold', fontSize: '14px' }}>Estat:</span>
-            <span style={{fontWeight: '500', background: '#e4e6ea', padding: '2px 8px', borderRadius: '10px', fontSize: '12px', marginLeft: '10px'}}>
-              {getName(statuses, issue.status_id)}
-            </span>
-          </div>
-          <div className="meta-item" style={{ marginBottom: '15px' }}>
-            <span className="meta-label" style={{ fontWeight: 'bold', fontSize: '14px' }}>Prioritat:</span>
-            <span style={{ marginLeft: '10px' }}>{getName(priorities, issue.priority_id)}</span>
-          </div>
-          <div className="meta-item" style={{ marginBottom: '15px' }}>
-            <span className="meta-label" style={{ fontWeight: 'bold', fontSize: '14px' }}>Severitat:</span>
-            <span style={{ marginLeft: '10px' }}>{getName(severities, issue.severity_id)}</span>
-          </div>
-          <div className="meta-item" style={{ borderTop: '1px solid #eee', paddingTop: '15px', marginTop: '15px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span className="meta-label" style={{ fontWeight: 'bold', fontSize: '14px' }}>Data Límit:</span>
-              {issue.deadline && (
-                <button onClick={handleDeleteDeadline} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#e34935', fontSize: '12px' }}>
-                  Eliminar
-                </button>
+        {/* Layout Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          
+          {/* Left Column (Canvas) */}
+          <div className="lg:col-span-8 flex flex-col gap-6">
+            
+            {/* Descripció */}
+            <section className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+              <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+                <span className="material-symbols-outlined text-[18px]">notes</span> Descripció
+              </h2>
+              <div className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+                {issue.description || <em className="text-gray-400">Sense descripció ampliada...</em>}
+              </div>
+            </section>
+
+            {/* Fitxers Adjunts */}
+            <section className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+              <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+                <span className="material-symbols-outlined text-[18px]">attach_file</span> Fitxers Adjunts
+              </h2>
+              
+              <div className="relative border-2 border-dashed border-gray-300 rounded-lg p-6 flex flex-col items-center justify-center text-center bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer group mb-4">
+                <input type="file" onChange={handleFileUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mb-3 shadow-sm group-hover:scale-105 transition-transform">
+                  <span className="material-symbols-outlined text-gray-400">cloud_upload</span>
+                </div>
+                <p className="text-sm font-medium text-gray-800 mb-1">Arrossega els fitxers aquí o fes clic per pujar-los</p>
+                <p className="text-xs text-gray-500">Qualsevol format, pujada instantània</p>
+              </div>
+
+              {attachments.length > 0 && (
+                <ul className="flex flex-col gap-2">
+                  {attachments.map(att => (
+                    <li key={att.id} className="flex justify-between items-center bg-gray-50 border border-gray-200 rounded-lg p-3">
+                      <a href={att.url} target="_blank" rel="noopener noreferrer" className="text-sm text-emerald-600 hover:text-emerald-700 font-medium truncate flex-1 flex items-center gap-2">
+                        <span className="material-symbols-outlined text-[16px]">draft</span>
+                        {att.filename} <span className="text-gray-400 text-xs font-normal">({Math.round(att.byte_size / 1024)} KB)</span>
+                      </a>
+                      <button onClick={() => handleDeleteAttachment(att.id)} className="text-red-500 hover:text-red-700 p-1 ml-2 transition-colors flex items-center">
+                        <span className="material-symbols-outlined text-[18px]">close</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
               )}
-            </div>
-            <span style={{ color: issue.deadline ? '#333' : '#aaa', display: 'block', marginTop: '5px' }}>
-              {issue.deadline ? new Date(issue.deadline).toLocaleDateString() : "Sense especificar"}
-            </span>
-          </div>
+            </section>
 
-          <div className="watchers-sidebar-panel" style={{ marginTop: '25px', background: '#fff', padding: '18px', borderRadius: '6px', border: '1px solid #eee' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-              <h4 style={{ margin: 0, color: 'var(--primary)', textTransform: 'uppercase', fontSize: '13px' }}>Watchers</h4>
-              <span style={{ fontSize: '12px', color: '#888' }}>{watchers.length} watcher{watchers.length === 1 ? '' : 's'}</span>
-            </div>
-
-            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '15px' }}>
-              <select
-                value={watcherToAdd}
-                onChange={(e) => setWatcherToAdd(e.target.value)}
-                style={{ flex: '1 1 170px', padding: '10px', borderRadius: '6px', border: '1px solid #d8dde4', fontSize: '14px' }}
-              >
-                <option value="">Usuari...</option>
-                {USERS.filter((user) => !watchers.some((watcher) => getWatcherId(watcher) === user.id)).map((user) => (
-                  <option key={user.id} value={user.id}>{user.name}</option>
-                ))}
-              </select>
-              <button
-                onClick={handleAddWatcher}
-                disabled={watchersLoading || !watcherToAdd}
-                className="btn btn-primary"
-                style={{ flex: '0 0 auto', minWidth: '120px' }}
-              >
-                {watchersLoading ? 'Afegint...' : 'Afegir'}
-              </button>
-            </div>
-            {watchersError && <p style={{ color: '#d23669', fontSize: '13px', marginBottom: '15px' }}>{watchersError}</p>}
-            {watchers.length === 0 ? (
-              <p style={{ fontSize: '14px', color: '#666', margin: 0 }}>Cap watcher assignat.</p>
-            ) : (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', margin: 0 }}>
-                {watchers.map((watcher) => (
-                  <div key={getWatcherId(watcher)} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#f5f8fb', borderRadius: '999px', padding: '8px 12px', border: '1px solid #d8dde4' }}>
-                    <span style={{ fontSize: '13px', color: '#2f4359' }}>{getWatcherName(watcher)}</span>
-                    <button
-                      onClick={() => handleRemoveWatcher(getWatcherId(watcher))}
-                      disabled={watchersLoading}
-                      style={{ background: 'transparent', border: 'none', color: '#e34935', cursor: 'pointer', fontSize: '13px' }}
+            {/* Comentaris */}
+            <section className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+              <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-5 flex items-center gap-2">
+                <span className="material-symbols-outlined text-[18px]">forum</span> Comentaris <span className="text-gray-400 normal-case ml-1">({comments.length})</span>
+              </h2>
+              
+              <div className="flex gap-4 mb-6">
+                <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold shrink-0 uppercase">
+                  {currentUser.name.charAt(0)}
+                </div>
+                <div className="flex-1 flex flex-col gap-3">
+                  <textarea 
+                    value={commentText} 
+                    onChange={(e) => setCommentText(e.target.value)} 
+                    placeholder="Afegeix un comentari..." 
+                    rows="3" 
+                    className="w-full rounded-lg border-gray-300 bg-gray-50 text-sm text-gray-900 p-3 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 outline-none resize-none transition-shadow"
+                  />
+                  <div className="flex justify-end">
+                    <button 
+                      onClick={handleAddComment} 
+                      disabled={commentLoading} 
+                      className="px-4 py-2 bg-emerald-500 text-white rounded-lg text-sm font-semibold hover:bg-emerald-600 transition-colors disabled:opacity-50"
                     >
-                      ✕
+                      {commentLoading ? 'Afegint...' : 'Afegir comentari'}
                     </button>
                   </div>
-                ))}
+                </div>
               </div>
-            )}
+
+              {commentsError && <p className="text-sm text-red-500 mb-4">{commentsError}</p>}
+
+              <div className="flex flex-col gap-4">
+                {comments.length === 0 ? (
+                  <p className="text-sm text-gray-500 text-center py-4">Encara no hi ha cap comentari.</p>
+                ) : (
+                  comments.map(comment => (
+                    <div key={comment.id} className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                      <div className="flex justify-between items-start gap-4 mb-3">
+                        <div className="flex items-center gap-3">
+                           <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold text-xs shrink-0 uppercase">
+                             {getCommentAuthor(comment).charAt(0)}
+                           </div>
+                           <div>
+                             <div className="text-sm font-bold text-gray-900">{getCommentAuthor(comment)}</div>
+                             <div className="text-xs text-gray-500">{new Date(comment.created_at).toLocaleString('ca-ES')}</div>
+                           </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          {isIssueOwner && (
+                            <button onClick={() => handleDeleteComment(comment.id)} className="text-[11px] font-semibold text-red-500 hover:text-red-700 uppercase tracking-wider">Eliminar</button>
+                          )}
+                          {isCommentOwner(comment) && currentEditId !== comment.id && (
+                            <button onClick={() => startEditComment(comment)} className="text-[11px] font-semibold text-indigo-500 hover:text-indigo-700 uppercase tracking-wider">Editar</button>
+                          )}
+                        </div>
+                      </div>
+
+                      {currentEditId === comment.id ? (
+                        <div className="flex flex-col gap-3">
+                          <textarea
+                            value={editCommentText}
+                            onChange={(e) => setEditCommentText(e.target.value)}
+                            rows={3}
+                            className="w-full rounded-lg border-gray-300 bg-white text-sm text-gray-900 p-3 focus:ring-1 focus:ring-indigo-500 outline-none"
+                          />
+                          <div className="flex justify-end gap-2">
+                            <button onClick={cancelEditComment} className="px-3 py-1.5 bg-white border border-gray-300 text-gray-600 rounded text-xs font-semibold hover:bg-gray-50 transition-colors">Cancel·lar</button>
+                            <button onClick={() => handleUpdateComment(comment.id)} disabled={editLoading} className="px-3 py-1.5 bg-indigo-500 text-white rounded text-xs font-semibold hover:bg-indigo-600 transition-colors">
+                              {editLoading ? 'Guardant...' : 'Guardar'}
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-gray-800 whitespace-pre-wrap pl-11">{comment.content}</p>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            </section>
+          </div>
+
+          {/* Right Column (Sidebar) */}
+          <div className="lg:col-span-4 flex flex-col gap-6">
+            
+            {/* Atributs */}
+            <section className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+              <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 pb-3 mb-4 flex items-center gap-2">
+                <span className="material-symbols-outlined text-[18px]">tune</span> Atributs
+              </h2>
+              
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-medium text-gray-500 uppercase">Assignat a</label>
+                  <div className="relative">
+                    <select value={issue.assigned_to_id || ""} onChange={handleAssign} className="w-full rounded-lg border-gray-300 bg-gray-50 text-sm p-2.5 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 outline-none appearance-none cursor-pointer">
+                      <option value="">Sense assignar</option>
+                      {USERS.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
+                    </select>
+                    <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-[18px]">expand_more</span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-xs font-medium text-gray-500 uppercase">Tipus</span>
+                    <span className="text-sm font-medium text-gray-900">{getName(issueTypes, issue.issue_type_id)}</span>
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-xs font-medium text-gray-500 uppercase">Estat</span>
+                    <span 
+                      className="inline-flex w-fit items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border"
+                      style={{ backgroundColor: `${statusColor}15`, color: statusColor, borderColor: `${statusColor}30` }}
+                    >
+                      {getName(statuses, issue.status_id)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-xs font-medium text-gray-500 uppercase">Prioritat</span>
+                    <span className="inline-flex w-fit items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-800 border border-gray-200">
+                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: priorityColor }}></span>
+                      {getName(priorities, issue.priority_id)}
+                    </span>
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-xs font-medium text-gray-500 uppercase">Severitat</span>
+                    <span className="inline-flex w-fit items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-800 border border-gray-200">
+                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: severityColor }}></span>
+                      {getName(severities, issue.severity_id)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1.5 mt-2 pt-4 border-t border-gray-100">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-medium text-gray-500 uppercase">Data Límit</span>
+                    {issue.deadline && (
+                      <button onClick={handleDeleteDeadline} className="text-[11px] font-semibold text-red-500 hover:text-red-700 hover:underline">Eliminar</button>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                    <span className="material-symbols-outlined text-[18px] text-gray-400">calendar_today</span>
+                    {issue.deadline ? new Date(issue.deadline).toLocaleDateString('ca-ES') : "Sense establir"}
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* Watchers */}
+            <section className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+              <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-100 pb-3 mb-4 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[18px]">visibility</span> Watchers
+                </div>
+                <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-[10px]">{watchers.length}</span>
+              </h2>
+              
+              <div className="flex flex-col gap-4">
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <select
+                      value={watcherToAdd}
+                      onChange={(e) => setWatcherToAdd(e.target.value)}
+                      className="w-full rounded-lg border-gray-300 bg-gray-50 text-sm p-2 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 outline-none appearance-none"
+                    >
+                      <option value="">Selecciona usuari...</option>
+                      {USERS.filter((user) => !watchers.some((w) => getWatcherId(w) === user.id)).map((user) => (
+                        <option key={user.id} value={user.id}>{user.name}</option>
+                      ))}
+                    </select>
+                    <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-[18px]">expand_more</span>
+                  </div>
+                  <button
+                    onClick={handleAddWatcher}
+                    disabled={watchersLoading || !watcherToAdd}
+                    className="px-3 py-2 bg-gray-100 text-gray-700 border border-gray-200 rounded-lg text-sm font-semibold hover:bg-gray-200 transition-colors disabled:opacity-50"
+                  >
+                    Afegir
+                  </button>
+                </div>
+
+                {watchersError && <p className="text-sm text-red-500 m-0">{watchersError}</p>}
+                
+                {watchers.length === 0 ? (
+                  <p className="text-sm text-gray-500 text-center italic mt-2">Cap watcher actiu</p>
+                ) : (
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    {watchers.map((watcher) => (
+                      <div key={getWatcherId(watcher)} className="flex items-center gap-1.5 bg-gray-100 rounded-full pl-3 pr-1.5 py-1 border border-gray-200">
+                        <span className="text-xs font-medium text-gray-700">{getWatcherName(watcher)}</span>
+                        <button
+                          onClick={() => handleRemoveWatcher(getWatcherId(watcher))}
+                          disabled={watchersLoading}
+                          className="text-gray-400 hover:text-red-500 transition-colors flex items-center justify-center rounded-full hover:bg-white p-0.5"
+                        >
+                          <span className="material-symbols-outlined text-[14px]">close</span>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </section>
+
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
