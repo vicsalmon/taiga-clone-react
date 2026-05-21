@@ -6,16 +6,61 @@ const getHeaders = (apiKey) => ({
   "X-Api-Key": apiKey
 });
 
+// helper genèric per fer fetch i llençar error si la resposta no és ok
+const request = async (url, options) => {
+  const res = await fetch(url, options);
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(body || `Error ${res.status}`);
+  }
+  // DELETE retorna 204 sense cos
+  if (res.status === 204) return true;
+  return res.json();
+};
+
+// helper per construir les operacions CRUD d'un recurs de configuració
+// endpoint: path relatiu sense barra inicial, p.ex. "statuses"
+const buildCrud = (endpoint) => ({
+  getAll: (apiKey) =>
+    request(`${API_BASE_URL}/${endpoint}`, { headers: getHeaders(apiKey) }),
+
+  create: (apiKey, data) =>
+    request(`${API_BASE_URL}/${endpoint}`, {
+      method: "POST",
+      headers: getHeaders(apiKey),
+      body: JSON.stringify(data)
+    }),
+
+  update: (apiKey, id, data) =>
+    request(`${API_BASE_URL}/${endpoint}/${id}`, {
+      method: "PUT",
+      headers: getHeaders(apiKey),
+      body: JSON.stringify(data)
+    }),
+
+  delete: (apiKey, id) =>
+    request(`${API_BASE_URL}/${endpoint}/${id}`, {
+      method: "DELETE",
+      headers: getHeaders(apiKey)
+    })
+});
+
+// recursos de configuració exposats com a sub-namespaces
+export const statusService     = buildCrud("statuses");
+export const issueTypeService  = buildCrud("issue_types");
+export const priorityService   = buildCrud("priorities");
+export const severityService   = buildCrud("severities");
+export const tagService        = buildCrud("tags");
+export const deadlineShortcutService = buildCrud("deadline_shortcuts");
+
 export const issueService = {
   getAll: async (apiKey, filters = {}) => {
     const params = new URLSearchParams();
     Object.keys(filters).forEach(key => {
-      if (filters[key]) {
-        params.append(key, filters[key]);
-      }
+      if (filters[key]) params.append(key, filters[key]);
     });
-    const response = await fetch(`${API_BASE_URL}/issues?${params.toString()}`, { 
-      headers: getHeaders(apiKey) 
+    const response = await fetch(`${API_BASE_URL}/issues?${params.toString()}`, {
+      headers: getHeaders(apiKey)
     });
     if (!response.ok) throw new Error("Error carregant issues");
     return response.json();
@@ -63,8 +108,8 @@ export const issueService = {
   },
 
   getAttachments: async (apiKey, issueId) => {
-    const response = await fetch(`${API_BASE_URL}/issues/${issueId}/attachments`, { 
-      headers: getHeaders(apiKey) 
+    const response = await fetch(`${API_BASE_URL}/issues/${issueId}/attachments`, {
+      headers: getHeaders(apiKey)
     });
     if (!response.ok) throw new Error("Error carregant els fitxers adjunts");
     return response.json();
@@ -75,10 +120,7 @@ export const issueService = {
     formData.append("file", file);
     const response = await fetch(`${API_BASE_URL}/issues/${issueId}/attachments`, {
       method: "POST",
-      headers: {
-        "Accept": "application/json",
-        "X-Api-Key": apiKey
-      },
+      headers: { "Accept": "application/json", "X-Api-Key": apiKey },
       body: formData
     });
     if (!response.ok) throw new Error("Error pujant el fitxer");
@@ -92,7 +134,7 @@ export const issueService = {
     return response.ok;
   },
 
-  // COMENTARIS
+  // comentaris
   getComments: async (apiKey, issueId) => {
     const response = await fetch(`${API_BASE_URL}/issues/${issueId}/comments`, {
       headers: getHeaders(apiKey)
@@ -129,7 +171,7 @@ export const issueService = {
     return response.ok;
   },
 
-  // WATCHERS
+  // watchers
   getWatchers: async (apiKey, issueId) => {
     const response = await fetch(`${API_BASE_URL}/issues/${issueId}/watching`, {
       headers: getHeaders(apiKey)
@@ -156,31 +198,15 @@ export const issueService = {
     return response.ok;
   },
 
-  getStatuses: async (apiKey) => {
-    const res = await fetch(`${API_BASE_URL}/statuses`, { headers: getHeaders(apiKey) });
-    if (!res.ok) return [];
-    return res.json();
-  },
-  
-  getIssueTypes: async (apiKey) => {
-    const res = await fetch(`${API_BASE_URL}/issue_types`, { headers: getHeaders(apiKey) });
-    if (!res.ok) return [];
-    return res.json();
-  },
-  
-  getPriorities: async (apiKey) => {
-    const res = await fetch(`${API_BASE_URL}/priorities`, { headers: getHeaders(apiKey) });
-    if (!res.ok) return [];
-    return res.json();
-  },
-  
-  getSeverities: async (apiKey) => {
-    const res = await fetch(`${API_BASE_URL}/severities`, { headers: getHeaders(apiKey) });
-    if (!res.ok) return [];
-    return res.json();
-  },
+  // atallers de getters individuals mantinguts per compatibilitat amb el context
+  getStatuses:    (apiKey) => statusService.getAll(apiKey),
+  getIssueTypes:  (apiKey) => issueTypeService.getAll(apiKey),
+  getPriorities:  (apiKey) => priorityService.getAll(apiKey),
+  getSeverities:  (apiKey) => severityService.getAll(apiKey),
+  getTags:        (apiKey) => tagService.getAll(apiKey),
+  getDeadlineShortcuts: (apiKey) => deadlineShortcutService.getAll(apiKey),
 
-  // --- GESTIÓ DEADLINES ---
+  // gestió deadlines
   deleteDeadline: async (apiKey, issueId) => {
     const response = await fetch(`${API_BASE_URL}/issues/${issueId}/deadline`, {
       method: "DELETE",

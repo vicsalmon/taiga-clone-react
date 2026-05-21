@@ -3,17 +3,16 @@ import IssueList from './components/IssueList';
 import BulkInsert from './components/BulkInsert';
 import IssueForm from './components/IssueForm';
 import IssueDetail from './components/IssueDetail';
+import SettingsPanel from './components/SettingsPanel';
 import Toast from './components/Toast';
 import './App.css';
 
 function App() {
   const [currentView, setCurrentView] = useState('list');
   const [selectedIssue, setSelectedIssue] = useState(null);
-  
-  // Estado para la notificación flotante
+
   const [toast, setToast] = useState({ message: '', type: '' });
 
-  // Función global para mostrar el mensaje
   const showNotification = (message, type = 'success') => {
     setToast({ message, type });
   };
@@ -35,28 +34,29 @@ function App() {
 
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-      
+
       {currentView === 'list' && (
-        <IssueList 
+        <IssueList
           onNavigateToBulk={() => setCurrentView('bulk')}
           onNavigateToCreate={() => { setSelectedIssue(null); setCurrentView('form'); }}
+          onNavigateToSettings={() => setCurrentView('settings')}
           onViewDetail={goToDetail}
           onShowNotification={showNotification}
         />
       )}
 
       {currentView === 'bulk' && (
-        <BulkInsert 
-          onBack={goToList} 
+        <BulkInsert
+          onBack={goToList}
           onShowNotification={showNotification}
         />
       )}
 
       {currentView === 'form' && (
-        <IssueForm 
-          onBack={goToList} 
-          issueToEdit={selectedIssue} 
-          onShowNotification={showNotification} 
+        <IssueForm
+          onBack={goToList}
+          issueToEdit={selectedIssue}
+          onShowNotification={showNotification}
         />
       )}
 
@@ -69,11 +69,17 @@ function App() {
         />
       )}
 
-      {/* Componente que se encarga de pintar la notificación si existe */}
-      <Toast 
-        message={toast.message} 
-        type={toast.type} 
-        onClose={() => setToast({ message: '', type: '' })} 
+      {currentView === 'settings' && (
+        <SettingsPanel
+          onBack={goToList}
+          onShowNotification={showNotification}
+        />
+      )}
+
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ message: '', type: '' })}
       />
 
     </div>

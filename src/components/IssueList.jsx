@@ -2,7 +2,7 @@ import { useState, useEffect, useContext } from 'react';
 import { UserContext } from '../context/UserContext';
 import { issueService } from '../services/issueService';
 
-export default function IssueList({ onNavigateToBulk, onNavigateToCreate, onViewDetail }) {
+export default function IssueList({ onNavigateToBulk, onNavigateToCreate, onViewDetail, onNavigateToSettings }) {
   const { currentUser, setCurrentUser, USERS, getUserNameById, statuses, issueTypes, priorities, severities } = useContext(UserContext);
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -35,7 +35,6 @@ export default function IssueList({ onNavigateToBulk, onNavigateToCreate, onView
     fetchIssues();
   };
 
-  // Helper para pintar el nombre exacto del estado en la tabla usando su ID
   const getStatusName = (statusId) => {
     const st = statuses.find(s => s.id === statusId);
     return st ? st.name : "New";
@@ -66,7 +65,8 @@ export default function IssueList({ onNavigateToBulk, onNavigateToCreate, onView
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div className="actions-bar" style={{ margin: 0 }}>
             <button onClick={onNavigateToCreate} className="btn btn-primary" style={{ padding: '12px 24px', fontSize: '15px' }}>+ NOVA INCIDÈNCIA</button>
-            <button onClick={onNavigateToBulk} className="btn btn-neutral" style={{ padding: '12px 24px', fontSize: '15px' }}>INSERCIÓ MASSIVA</button>
+            <button onClick={onNavigateToBulk} className="btn btn-neutral" style={{ padding: '12px 24px', fontSize: '15px', marginLeft: '10px' }}>INSERCIÓ MASSIVA</button>
+            <button onClick={onNavigateToSettings} className="btn btn-secondary" style={{ padding: '12px 24px', fontSize: '15px', marginLeft: '10px' }}>⚙️ Configuració</button>
           </div>
 
           <form onSubmit={handleSearch} style={{ margin: 0, display: 'flex', gap: '10px' }}>
@@ -140,7 +140,6 @@ export default function IssueList({ onNavigateToBulk, onNavigateToCreate, onView
               <option value="asc">Ascendent</option>
             </select>
           </div>
-
         </div>
       </div>
 
