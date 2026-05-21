@@ -3,8 +3,8 @@ import { UserContext } from '../context/UserContext';
 import { issueService } from '../services/issueService';
 
 export default function IssueForm({ onBack, issueToEdit = null, onShowNotification }) {
-  // Extraemos las listas dinámicas del Context
-  const { currentUser, USERS, statuses, issueTypes, priorities, severities } = useContext(UserContext);
+  // s'afegeix deadlineShortcuts a l'extracció del context
+  const { currentUser, USERS, statuses, issueTypes, priorities, severities, deadlineShortcuts } = useContext(UserContext);
   const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -30,7 +30,6 @@ export default function IssueForm({ onBack, issueToEdit = null, onShowNotificati
     const payload = { ...formData };
     if (!payload.deadline) delete payload.deadline;
     
-    // Forzamos a número o null
     payload.assigned_to_id = (payload.assigned_to_id === "" || payload.assigned_to_id === null) ? null : parseInt(payload.assigned_to_id, 10);
 
     try {
@@ -47,6 +46,14 @@ export default function IssueForm({ onBack, issueToEdit = null, onShowNotificati
     } finally {
       setLoading(false);
     }
+  };
+
+  // funció per calcular la nova data sumant els dies d'offset a la data actual
+  const handleShortcutClick = (offsetDays) => {
+    const newDate = new Date();
+    newDate.setDate(newDate.getDate() + offsetDays);
+    const formattedDate = newDate.toISOString().split('T')[0];
+    setFormData({ ...formData, deadline: formattedDate });
   };
 
   return (
@@ -144,6 +151,31 @@ export default function IssueForm({ onBack, issueToEdit = null, onShowNotificati
               disabled={loading}
               style={{ width: '100%', boxSizing: 'border-box' }}
             />
+            
+            {/* bloc de botons per als atajos de dates límits */}
+            {deadlineShortcuts && deadlineShortcuts.length > 0 && (
+              <div style={{ marginTop: '10px', display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
+                {deadlineShortcuts.map(shortcut => (
+                  <button
+                    key={shortcut.id}
+                    type="button"
+                    onClick={() => handleShortcutClick(shortcut.offset_days)}
+                    disabled={loading}
+                    style={{
+                      padding: '4px 8px',
+                      fontSize: '12px',
+                      background: '#e4e6ea',
+                      color: '#333',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {shortcut.name}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
