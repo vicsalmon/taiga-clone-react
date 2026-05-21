@@ -1,151 +1,109 @@
 import { useState, useEffect, useContext } from 'react';
 import { UserContext } from '../context/UserContext';
 import { issueService } from '../services/issueService';
+import { MAPPINGS } from '../utils/constants';
 
 export default function IssueList({ onNavigateToBulk, onNavigateToCreate, onViewDetail }) {
-  // 1. Extraemos el usuario actual y la lista de usuarios del Contexto
-  const { currentUser, setCurrentUser, USERS } = useContext(UserContext);
-  
-  // 2. Estados locales para guardar las issues y los filtros
+  const { currentUser, setCurrentUser, USERS, getUserNameById } = useContext(UserContext);
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [filters, setFilters] = useState({
-    query: '',
-    sort: 'created_at',
-    direction: 'desc'
-  });
+  const [filters, setFilters] = useState({ query: '', sort: 'created_at', direction: 'desc' });
 
-  // 3. Función que llama al Backend. Se ejecuta al cargar la página o al cambiar de usuario/filtros.
   const fetchIssues = async () => {
     setLoading(true);
     try {
       const data = await issueService.getAll(currentUser.apiKey, filters);
-      setIssues(data);
+      setIssues(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error("Error cargando issues:", error);
-      alert("Hubo un error al conectar con la API");
+      alert("Error de connexió.");
     } finally {
       setLoading(false);
     }
   };
 
-  // useEffect "escucha" si cambia el usuario o el orden, y vuelve a pedir los datos a la API
   useEffect(() => {
     fetchIssues();
   }, [currentUser, filters.sort, filters.direction]);
 
-  // Manejador para el buscador (se ejecuta al darle a Enter o al botón "Buscar")
   const handleSearch = (e) => {
     e.preventDefault();
     fetchIssues();
   };
 
   return (
-    <div style={{ padding: '20px', fontFamily: 'sans-serif' }}>
-      
-      {/* HEADER: EL DROPDOWN DE USUARIOS (Requisito del profesor) */}
-      <header style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', paddingBottom: '10px', borderBottom: '1px solid #ccc' }}>
-        <h2>Taiga Clone - Tauler d'Incidències</h2>
-        <div>
-          <label style={{ marginRight: '10px' }}>👤 Usuari actiu:</label>
+    <div className="panel" style={{ padding: '30px' }}>
+      <header className="header-main">
+        <h2 style={{ fontSize: '28px', margin: 0, color: '#333' }}>Incidències</h2>
+        <div className="user-selector" style={{ background: '#f0f0f0' }}>
+          <label style={{ fontSize: '12px', textTransform: 'uppercase', color: '#666' }}>Actiu com:</label>
           <select 
-            value={currentUser.id} 
+            value={currentUser.backendId} 
             onChange={(e) => {
-              const selectedUser = USERS.find(u => u.id === parseInt(e.target.value));
+              const selectedUser = USERS.find(u => u.backendId === e.target.value);
               setCurrentUser(selectedUser);
             }}
-            style={{ padding: '5px' }}
+            style={{ border: 'none', background: 'transparent', fontWeight: 'bold', fontSize: '14px', outline: 'none', cursor: 'pointer' }}
           >
-            {USERS.map(u => (
-              <option key={u.id} value={u.id}>{u.name}</option>
+            {USERS.map((u, index) => (
+              <option key={u.backendId || index} value={u.backendId}>{u.name}</option>
             ))}
           </select>
         </div>
       </header>
 
-      {/* BARRA DE BÚSQUEDA Y ORDENACIÓN */}
-      <form onSubmit={handleSearch} style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-        <input 
-          type="text" 
-          placeholder="Cercar per text (subject)..." 
-          value={filters.query}
-          onChange={(e) => setFilters({ ...filters, query: e.target.value })}
-          style={{ padding: '5px', flex: 1 }}
-        />
-        
-        <select 
-          value={filters.sort} 
-          onChange={(e) => setFilters({ ...filters, sort: e.target.value })}
-          style={{ padding: '5px' }}
-        >
-          <option value="created_at">Data de creació</option>
-          <option value="id">ID</option>
-          <option value="priority">Prioritat</option>
-          <option value="severity">Severitat</option>
-        </select>
+      <div style={{display: 'flex', justifyContent: 'space-between', gap: '20px', marginBottom: '30px', alignItems: 'center'}}>
+        <div className="actions-bar" style={{margin: 0}}>
+          <button onClick={onNavigateToCreate} className="btn btn-primary" style={{ padding: '12px 24px', fontSize: '15px' }}>+ NOVA INCIDÈNCIA</button>
+          <button onClick={onNavigateToBulk} className="btn btn-neutral" style={{ padding: '12px 24px', fontSize: '15px' }}>INSERCIÓ MASSIVA</button>
+        </div>
 
-        <select 
-          value={filters.direction} 
-          onChange={(e) => setFilters({ ...filters, direction: e.target.value })}
-          style={{ padding: '5px' }}
-        >
-          <option value="desc">Descendent</option>
-          <option value="asc">Ascendent</option>
-        </select>
-
-        <button type="submit" style={{ padding: '5px 15px', cursor: 'pointer' }}>Cercar</button>
-      </form>
-
-      {/* ACCIONES RÁPIDAS */}
-      <div style={{ marginBottom: '20px' }}>
-        <button 
-          onClick={onNavigateToCreate}
-          style={{ marginRight: '10px', background: '#00b19d', color: 'white', border: 'none', padding: '8px 12px', cursor: 'pointer' }}
-        >
-          + Crear Issue
-        </button>
-        <button 
-          onClick={onNavigateToBulk}
-          style={{ background: '#222', color: 'white', border: 'none', padding: '8px 12px', cursor: 'pointer' }}
-        >
-          ⚡ Bulk Insert
-        </button>
+        <form onSubmit={handleSearch} className="search-bar" style={{margin: 0, flex: 1, justifyContent: 'flex-end'}}>
+          <input 
+            type="text" 
+            placeholder="Cercar..." 
+            value={filters.query}
+            onChange={(e) => setFilters({ ...filters, query: e.target.value })}
+            style={{maxWidth: '300px', borderRadius: '20px', padding: '10px 20px'}}
+          />
+        </form>
       </div>
 
-      {/* LISTA DE INCIDENCIAS */}
       {loading ? (
-        <p>Carregant incidències...</p>
+        <div style={{textAlign: 'center', padding: '60px', color: '#888'}}>Carregant dades...</div>
       ) : (
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+        <table className="taiga-table" style={{ boxShadow: 'none', border: '1px solid #eaeaea' }}>
           <thead>
-            <tr style={{ borderBottom: '2px solid #ccc' }}>
-              <th># ID</th>
-              <th>Subject</th>
-              <th>Status</th>
-              <th>Assignat a</th>
-              <th>Accions</th>
+            <tr style={{ background: '#f8f9fa' }}>
+              <th style={{ width: '80px', textAlign: 'center' }}>ID</th>
+              <th>Assumpte</th>
+              <th style={{ width: '150px' }}>Estat</th>
+              <th style={{ width: '200px' }}>Assignat a</th>
             </tr>
           </thead>
           <tbody>
-            {issues.map(issue => (
-              <tr key={issue.id} style={{ borderBottom: '1px solid #eee' }}>
-                <td style={{ padding: '10px 0' }}>{issue.id}</td>
-                <td>{issue.subject}</td>
-                <td>{issue.status_id || 'New'}</td>
-                <td>{issue.assigned_to_id ? `Usuari ${issue.assigned_to_id}` : 'Sense assignar'}</td>
+            {issues.map((issue, index) => (
+              <tr key={issue.id || `issue-${index}`} style={{ cursor: 'default' }}>
+                <td style={{ textAlign: 'center', color: '#888', fontWeight: '500' }}>#{issue.id || index}</td>
                 <td>
-                  {/* AQUÍ ESTÁ EL CAMBIO IMPORTANTE 👇 */}
-                  <button onClick={() => onViewDetail(issue.id)} style={{ cursor: 'pointer' }}>
-                    Veure Detall
-                  </button>
+                  <span 
+                    onClick={() => onViewDetail(issue.id)} 
+                    style={{ fontWeight: '600', color: 'var(--primary)', cursor: 'pointer', textDecoration: 'none', fontSize: '15px' }}
+                    onMouseEnter={(e) => e.target.style.textDecoration = 'underline'}
+                    onMouseLeave={(e) => e.target.style.textDecoration = 'none'}
+                  >
+                    {issue.subject}
+                  </span>
+                </td>
+                <td>
+                  <span style={{background: '#f0f0f0', color: '#555', padding: '4px 12px', borderRadius: '15px', fontSize: '12px', fontWeight: '600'}}>
+                    {MAPPINGS.status[issue.status_id] || "Nou"}
+                  </span>
+                </td>
+                <td style={{ color: issue.assigned_to_id ? '#333' : '#aaa', fontSize: '14px' }}>
+                  {getUserNameById(issue.assigned_to_id)}
                 </td>
               </tr>
             ))}
-            {issues.length === 0 && (
-              <tr>
-                <td colSpan="5" style={{ textAlign: 'center', padding: '20px' }}>No s'han trobat incidències.</td>
-              </tr>
-            )}
           </tbody>
         </table>
       )}
