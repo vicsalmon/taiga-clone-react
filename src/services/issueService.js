@@ -10,11 +10,18 @@ export const issueService = {
   // VISUALITZAR, FILTRAR, ORDENAR I CERCAR
   getAll: async (apiKey, filters = {}) => {
     const params = new URLSearchParams();
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value) params.append(key, value);
+    
+    // Recorre el objeto y añade a la URL solo lo que tiene texto
+    Object.keys(filters).forEach(key => {
+      if (filters[key]) {
+        params.append(key, filters[key]);
+      }
     });
     
-    const response = await fetch(`${API_BASE_URL}/issues?${params.toString()}`, { headers: getHeaders(apiKey) });
+    const response = await fetch(`${API_BASE_URL}/issues?${params.toString()}`, { 
+      headers: getHeaders(apiKey) 
+    });
+    
     if (!response.ok) throw new Error("Error carregant issues");
     return response.json();
   },
@@ -63,5 +70,29 @@ export const issueService = {
       body: JSON.stringify({ text })
     });
     return response.json();
+  },
+
+  getStatuses: async (apiKey) => {
+    const res = await fetch(`${API_BASE_URL}/statuses`, { headers: getHeaders(apiKey) });
+    if (!res.ok) return [];
+    return res.json();
+  },
+  
+  getIssueTypes: async (apiKey) => {
+    const res = await fetch(`${API_BASE_URL}/issue_types`, { headers: getHeaders(apiKey) });
+    if (!res.ok) return [];
+    return res.json();
+  },
+  
+  getPriorities: async (apiKey) => {
+    const res = await fetch(`${API_BASE_URL}/priorities`, { headers: getHeaders(apiKey) });
+    if (!res.ok) return [];
+    return res.json();
+  },
+  
+  getSeverities: async (apiKey) => {
+    const res = await fetch(`${API_BASE_URL}/severities`, { headers: getHeaders(apiKey) });
+    if (!res.ok) return [];
+    return res.json();
   }
 };

@@ -1,184 +1,224 @@
-.counter {
-  font-size: 16px;
-  padding: 5px 10px;
-  border-radius: 5px;
-  color: var(--accent);
-  background: var(--accent-bg);
-  border: 2px solid transparent;
-  transition: border-color 0.3s;
-  margin-bottom: 24px;
-
-  &:hover {
-    border-color: var(--accent-border);
-  }
-  &:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-  }
+/* =========================================
+   ESTILOS GLOBALES & VARIABLES (Taiga Style)
+   ========================================= */
+:root {
+  --primary: #00b19d; /* El turquesa característico de Taiga */
+  --primary-hover: #009d8b;
+  --background: #f4f5f7;
+  --panel-bg: #ffffff;
+  --text-main: #333333;
+  --text-light: #707070;
+  --border-color: #ddd;
+  --danger: #e34935;
+  --danger-hover: #d13f2c;
+  --neutral: #222;
+  --neutral-hover: #444;
+  --shadow: 0 2px 4px rgba(0,0,0,0.1);
+  --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
-.hero {
-  position: relative;
-
-  .base,
-  .framework,
-  .vite {
-    inset-inline: 0;
-    margin: 0 auto;
-  }
-
-  .base {
-    width: 170px;
-    position: relative;
-    z-index: 0;
-  }
-
-  .framework,
-  .vite {
-    position: absolute;
-  }
-
-  .framework {
-    z-index: 1;
-    top: 34px;
-    height: 28px;
-    transform: perspective(2000px) rotateZ(300deg) rotateX(44deg) rotateY(39deg)
-      scale(1.4);
-  }
-
-  .vite {
-    z-index: 0;
-    top: 107px;
-    height: 26px;
-    width: auto;
-    transform: perspective(2000px) rotateZ(300deg) rotateX(40deg) rotateY(39deg)
-      scale(0.8);
-  }
+body {
+  margin: 0;
+  font-family: var(--font-family);
+  background-color: var(--background);
+  color: var(--text-main);
+  -webkit-font-smoothing: antialiased;
 }
 
-#center {
-  display: flex;
-  flex-direction: column;
-  gap: 25px;
-  place-content: center;
-  place-items: center;
-  flex-grow: 1;
-
-  @media (max-width: 1024px) {
-    padding: 32px 20px 24px;
-    gap: 18px;
-  }
+/* Paneles blancos genéricos */
+.panel {
+  background: var(--panel-bg);
+  padding: 25px;
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  margin-bottom: 20px;
 }
 
-#next-steps {
-  display: flex;
-  border-top: 1px solid var(--border);
-  text-align: left;
-
-  & > div {
-    flex: 1 1 0;
-    padding: 32px;
-    @media (max-width: 1024px) {
-      padding: 24px 20px;
-    }
-  }
-
-  .icon {
-    margin-bottom: 16px;
-    width: 22px;
-    height: 22px;
-  }
-
-  @media (max-width: 1024px) {
-    flex-direction: column;
-    text-align: center;
-  }
-}
-
-#docs {
-  border-right: 1px solid var(--border);
-
-  @media (max-width: 1024px) {
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-  }
-}
-
-#next-steps ul {
-  list-style: none;
-  padding: 0;
-  display: flex;
-  gap: 8px;
-  margin: 32px 0 0;
-
-  .logo {
-    height: 18px;
-  }
-
-  a {
-    color: var(--text-h);
-    font-size: 16px;
-    border-radius: 6px;
-    background: var(--social-bg);
-    display: flex;
-    padding: 6px 12px;
-    align-items: center;
-    gap: 8px;
-    text-decoration: none;
-    transition: box-shadow 0.3s;
-
-    &:hover {
-      box-shadow: var(--shadow);
-    }
-    .button-icon {
-      height: 18px;
-      width: 18px;
-    }
-  }
-
-  @media (max-width: 1024px) {
-    margin-top: 20px;
-    flex-wrap: wrap;
-    justify-content: center;
-
-    li {
-      flex: 1 1 calc(50% - 8px);
-    }
-
-    a {
-      width: 100%;
-      justify-content: center;
-      box-sizing: border-box;
-    }
-  }
-}
-
-#spacer {
-  height: 88px;
-  border-top: 1px solid var(--border);
-  @media (max-width: 1024px) {
-    height: 48px;
-  }
-}
-
-.ticks {
-  position: relative;
+/* =========================================
+   ELEMENTOS DE FORMULARIO COMUNES
+   ========================================= */
+input[type="text"],
+input[type="number"],
+select,
+textarea {
   width: 100%;
-
-  &::before,
-  &::after {
-    content: '';
-    position: absolute;
-    top: -4.5px;
-    border: 5px solid transparent;
-  }
-
-  &::before {
-    left: 0;
-    border-left-color: var(--border);
-  }
-  &::after {
-    right: 0;
-    border-right-color: var(--border);
-  }
+  padding: 10px 15px;
+  margin: 8px 0;
+  display: inline-block;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box; /* Importante para el padding */
+  font-family: var(--font-family);
+  font-size: 14px;
+  transition: border-color 0.2s;
 }
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(0, 177, 157, 0.2);
+}
+
+label {
+  font-weight: 600;
+  color: #555;
+  font-size: 14px;
+}
+
+/* =========================================
+   BOTONES
+   ========================================= */
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: background-color 0.2s, transform 0.1s;
+  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn:disabled {
+  background-color: #ccc !important;
+  cursor: not-allowed;
+}
+
+/* Variaciones de botones */
+.btn-primary {
+  background-color: var(--primary);
+  color: white;
+}
+.btn-primary:hover {
+  background-color: var(--primary-hover);
+}
+
+.btn-danger {
+  background-color: var(--danger);
+  color: white;
+}
+.btn-danger:hover {
+  background-color: var(--danger-hover);
+}
+
+.btn-neutral {
+  background-color: var(--neutral);
+  color: white;
+}
+.btn-neutral:hover {
+  background-color: var(--neutral-hover);
+}
+
+.btn-secondary {
+  background-color: #e4e6ea;
+  color: var(--text-main);
+}
+.btn-secondary:hover {
+  background-color: #d8dbe0;
+}
+
+/* =========================================
+   ESTILOS ESPECÍFICOS DE COMPONENTES
+   ========================================= */
+
+/* Header & User Selector */
+.header-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.header-main h2 {
+  margin: 0;
+  color: var(--primary);
+}
+
+.user-selector {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #e4e6ea;
+  padding: 5px 15px;
+  border-radius: 20px;
+  font-size: 14px;
+}
+.user-selector select {
+  width: auto;
+  margin: 0;
+  padding: 3px 10px;
+  background: transparent;
+  border: none;
+  font-weight: bold;
+}
+
+/* Barra de Búsqueda */
+.search-bar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  align-items: center;
+}
+.search-bar input { flex: 2; margin: 0; }
+.search-bar select { flex: 1; margin: 0; }
+.search-bar .btn { margin: 0; }
+
+/* Tabla Taiga */
+.taiga-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--panel-bg);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.taiga-table th {
+  text-align: left;
+  padding: 15px;
+  font-weight: 600;
+  color: var(--text-light);
+  border-bottom: 2px solid var(--border-color);
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+.taiga-table td {
+  padding: 15px;
+  border-bottom: 1px solid #eee;
+  font-size: 14px;
+}
+.taiga-table tbody tr:hover { background-color: #fafafa; }
+.col-id { color: #888; font-weight: bold; width: 60px; }
+
+/* Detalles (Grid) */
+.detail-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 30px;
+  margin-top: 20px;
+}
+.description-panel { min-height: 200px; }
+.sidebar-panel .meta-item {
+  margin-bottom: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.sidebar-panel .meta-label { font-weight: 600; color: var(--text-light); font-size: 13px; }
+.sidebar-panel select { margin: 0; padding: 5px; width: auto; max-width: 60%; }
+
+/* Alerts */
+.alert { padding: 15px; border-radius: 4px; margin-bottom: 20px; font-size: 14px; }
+.alert-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+.alert-danger { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
