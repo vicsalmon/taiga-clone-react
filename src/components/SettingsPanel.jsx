@@ -9,153 +9,73 @@ import {
   deadlineShortcutService
 } from '../services/issueService';
 
-// mapa de cada secció: clau, label, servei i camps del formulari
 const SECTIONS = [
-  {
-    key: 'statuses',
-    label: 'Estats',
-    service: statusService,
-    fields: [
-      { name: 'name',      label: 'Nom',   type: 'text',     required: true },
-      { name: 'color',    label: 'Color', type: 'color',    required: false },
-      { name: 'is_closed', label: 'Tancat', type: 'checkbox', required: false }
-    ]
-  },
-  {
-    key: 'priorities',
-    label: 'Prioritats',
-    service: priorityService,
-    fields: [
-      { name: 'name',  label: 'Nom',   type: 'text',  required: true },
-      { name: 'color', label: 'Color', type: 'color', required: false }
-    ]
-  },
-  {
-    key: 'issueTypes',
-    label: 'Tipus',
-    service: issueTypeService,
-    fields: [
-      { name: 'name',  label: 'Nom',   type: 'text',  required: true },
-      { name: 'color', label: 'Color', type: 'color', required: false }
-    ]
-  },
-  {
-    key: 'severities',
-    label: 'Severitats',
-    service: severityService,
-    fields: [
-      { name: 'name',  label: 'Nom',   type: 'text',  required: true },
-      { name: 'color', label: 'Color', type: 'color', required: false }
-    ]
-  },
-  {
-    key: 'tags',
-    label: 'Etiquetes',
-    service: tagService,
-    fields: [
-      { name: 'name',  label: 'Nom',   type: 'text',  required: true },
-      { name: 'color', label: 'Color', type: 'color', required: false }
-    ]
-  },
-  {
-    key: 'deadlineShortcuts',
-    label: 'Dreceres de Deadline',
-    service: deadlineShortcutService,
-    fields: [
-      { name: 'name',        label: 'Nom',     type: 'text',   required: true },
-      { name: 'offset_days', label: 'Dies',    type: 'number', required: true }
-    ]
-  }
+  { key: 'statuses', label: 'ESTATS', service: statusService, fields: [
+    { name: 'name', label: 'Nom', type: 'text', required: true },
+    { name: 'color', label: 'Color', type: 'color', required: false },
+    { name: 'is_closed', label: 'Tancat', type: 'checkbox', required: false }
+  ]},
+  { key: 'priorities', label: 'PRIORITATS', service: priorityService, fields: [
+    { name: 'name', label: 'Nom', type: 'text', required: true },
+    { name: 'color', label: 'Color', type: 'color', required: false }
+  ]},
+  { key: 'issueTypes', label: 'TIPUS', service: issueTypeService, fields: [
+    { name: 'name', label: 'Nom', type: 'text', required: true },
+    { name: 'color', label: 'Color', type: 'color', required: false }
+  ]},
+  { key: 'severities', label: 'SEVERITATS', service: severityService, fields: [
+    { name: 'name', label: 'Nom', type: 'text', required: true },
+    { name: 'color', label: 'Color', type: 'color', required: false }
+  ]},
+  { key: 'tags', label: 'ETIQUETES', service: tagService, fields: [
+    { name: 'name', label: 'Nom', type: 'text', required: true },
+    { name: 'color', label: 'Color', type: 'color', required: false }
+  ]},
+  { key: 'deadlineShortcuts', label: 'DRECERES DEADLINE', service: deadlineShortcutService, fields: [
+    { name: 'name', label: 'Nom', type: 'text', required: true },
+    { name: 'offset_days', label: 'Dies', type: 'number', required: true }
+  ]}
 ];
 
-// construeix l'estat inicial del formulari per a una secció
 const buildInitialForm = (fields, item = null) =>
   fields.reduce((acc, f) => {
-    if (f.type === 'checkbox') {
-      acc[f.name] = item ? !!item[f.name] : false;
-    } else if (f.type === 'color') {
-      acc[f.name] = item?.[f.name] || '#4c8bf5';
-    } else {
-      acc[f.name] = item?.[f.name] ?? '';
-    }
+    if (f.type === 'checkbox') acc[f.name] = item ? !!item[f.name] : false;
+    else if (f.type === 'color') acc[f.name] = item?.[f.name] || '#4c8bf5';
+    else acc[f.name] = item?.[f.name] ?? '';
     return acc;
   }, {});
 
-// component de formulari inline per crear o editar un element
 function ItemForm({ fields, initial, loading, onSave, onCancel }) {
   const [form, setForm] = useState(initial);
-
-  const handleChange = (name, value) =>
-    setForm(prev => ({ ...prev, [name]: value }));
+  const handleChange = (name, value) => setForm(prev => ({ ...prev, [name]: value }));
 
   const handleSubmit = () => {
     const missing = fields.find(f => f.required && !String(form[f.name] ?? '').trim());
     if (missing) return;
-    
-    // assegurem que els camps de tipus nombre s'enviïn com a enters a l'API
     const payload = { ...form };
-    fields.forEach(f => {
-      if (f.type === 'number' && payload[f.name] !== undefined) {
-        payload[f.name] = parseInt(payload[f.name], 10) || 0;
-      }
-    });
-
+    fields.forEach(f => { if (f.type === 'number' && payload[f.name] !== undefined) payload[f.name] = parseInt(payload[f.name], 10) || 0; });
     onSave(payload);
   };
 
   return (
-    <div style={{
-      display: 'flex', flexWrap: 'wrap', gap: '10px',
-      alignItems: 'flex-end', background: '#f0f4ff',
-      border: '1px solid #d0d9f5', borderRadius: '6px',
-      padding: '14px', marginBottom: '10px'
-    }}>
+    <div className="flex flex-wrap gap-4 items-end bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
       {fields.map(f => (
-        <div key={f.name} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <label style={{ fontSize: '11px', textTransform: 'uppercase', color: '#888', fontWeight: '600' }}>
-            {f.label}{f.required ? ' *' : ''}
-          </label>
+        <div key={f.name} className="flex flex-col gap-1">
+          <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">{f.label}</label>
           {f.type === 'checkbox' ? (
-            <input
-              type="checkbox"
-              checked={!!form[f.name]}
-              onChange={e => handleChange(f.name, e.target.checked)}
-              style={{ width: '18px', height: '18px', marginTop: '4px' }}
-            />
+            <input type="checkbox" checked={!!form[f.name]} onChange={e => handleChange(f.name, e.target.checked)} className="w-5 h-5 rounded border-gray-300 text-emerald-500 focus:ring-emerald-500" />
           ) : (
-            <input
-              type={f.type}
-              value={form[f.name] ?? ''}
-              onChange={e => handleChange(f.name, e.target.value)}
-              style={{
-                padding: f.type === 'color' ? '3px 6px' : '8px 10px',
-                border: '1px solid #d0d9f5', borderRadius: '4px',
-                fontSize: '14px', width: f.type === 'color' ? '50px' : f.type === 'number' ? '80px' : '180px',
-                height: f.type === 'color' ? '34px' : 'auto'
-              }}
+            <input 
+              type={f.type} value={form[f.name] ?? ''} onChange={e => handleChange(f.name, e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-md text-sm outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+              style={{ width: f.type === 'color' ? '50px' : f.type === 'number' ? '80px' : '160px' }}
             />
           )}
         </div>
       ))}
-      <div style={{ display: 'flex', gap: '8px', marginLeft: 'auto' }}>
-        <button
-          onClick={onCancel}
-          style={{
-            background: 'transparent', border: '1px solid #bbb', color: '#555',
-            borderRadius: '5px', padding: '8px 14px', cursor: 'pointer', fontSize: '13px'
-          }}
-        >
-          Cancel·lar
-        </button>
-        <button
-          onClick={handleSubmit}
-          disabled={loading}
-          style={{
-            background: 'var(--primary, #0052cc)', color: '#fff', border: 'none',
-            borderRadius: '5px', padding: '8px 16px', cursor: loading ? 'not-allowed' : 'pointer',
-            fontSize: '13px', opacity: loading ? 0.7 : 1
-          }}
-        >
+      <div className="flex gap-2 ml-auto">
+        <button onClick={onCancel} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900">Cancel·lar</button>
+        <button onClick={handleSubmit} disabled={loading} className="px-4 py-2 bg-emerald-500 text-white rounded-lg text-sm font-semibold hover:bg-emerald-600 shadow-sm">
           {loading ? 'Guardant...' : 'Guardar'}
         </button>
       </div>
@@ -163,231 +83,103 @@ function ItemForm({ fields, initial, loading, onSave, onCancel }) {
   );
 }
 
-// component per a una sola secció de configuració (un recurs)
 function SettingsSection({ section, items, refresh, apiKey, onShowNotification }) {
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [editingId, setEditingId]           = useState(null);
-  const [loading, setLoading]               = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const handleCreate = async (formData) => {
-    try {
-      setLoading(true);
-      await section.service.create(apiKey, formData);
-      await refresh();
-      setShowCreateForm(false);
-      onShowNotification(`${section.label}: element creat correctament.`, 'success');
-    } catch (err) {
-      console.error(err);
-      onShowNotification(`Error creant l'element a ${section.label}.`, 'error');
-    } finally {
-      setLoading(false);
-    }
+    setLoading(true);
+    try { await section.service.create(apiKey, formData); await refresh(); setShowCreateForm(false); onShowNotification('Creat correctament', 'success'); }
+    catch { onShowNotification('Error en crear', 'error'); }
+    finally { setLoading(false); }
   };
 
   const handleUpdate = async (id, formData) => {
-    try {
-      setLoading(true);
-      await section.service.update(apiKey, id, formData);
-      await refresh();
-      setEditingId(null);
-      onShowNotification(`${section.label}: element actualitzat.`, 'success');
-    } catch (err) {
-      console.error(err);
-      onShowNotification(`Error actualitzant l'element a ${section.label}.`, 'error');
-    } finally {
-      setLoading(false);
-    }
+    setLoading(true);
+    try { await section.service.update(apiKey, id, formData); await refresh(); setEditingId(null); onShowNotification('Actualitzat', 'success'); }
+    catch { onShowNotification('Error en actualitzar', 'error'); }
+    finally { setLoading(false); }
   };
 
   const handleDelete = async (id, name) => {
     if (!window.confirm(`Segur que vols eliminar "${name}"?`)) return;
-    try {
-      setLoading(true);
-      await section.service.delete(apiKey, id);
-      await refresh();
-      onShowNotification(`${section.label}: element eliminat.`, 'success');
-    } catch (err) {
-      console.error(err);
-      onShowNotification(`Error eliminant l'element a ${section.label}.`, 'error');
-    } finally {
-      setLoading(false);
-    }
+    setLoading(true);
+    try { await section.service.delete(apiKey, id); await refresh(); onShowNotification('Eliminat', 'success'); }
+    catch { onShowNotification('Error en eliminar', 'error'); }
+    finally { setLoading(false); }
   };
 
   return (
-    <div style={{
-      background: '#fff', border: '1px solid #eee',
-      borderRadius: '6px', padding: '20px', marginBottom: '20px'
-    }}>
-      {/* capçalera de secció */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-        <h3 style={{ margin: 0, fontSize: '14px', textTransform: 'uppercase', color: 'var(--primary, #0052cc)', letterSpacing: '0.05em' }}>
-          {section.label}
-          <span style={{ marginLeft: '8px', fontWeight: '400', color: '#aaa', fontSize: '12px' }}>
-            ({items.length})
-          </span>
+    <section className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8">
+      <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+        <h3 className="text-sm font-bold text-gray-700 flex items-center gap-2 tracking-wide">
+          {section.label} <span className="text-gray-400 bg-gray-200 px-2 py-0.5 rounded-full text-xs font-medium">{items.length}</span>
         </h3>
         {!showCreateForm && (
-          <button
-            onClick={() => setShowCreateForm(true)}
-            style={{
-              background: 'var(--primary, #0052cc)', color: '#fff', border: 'none',
-              borderRadius: '5px', padding: '7px 14px', cursor: 'pointer', fontSize: '13px'
-            }}
-          >
-            + Afegir
+          <button onClick={() => setShowCreateForm(true)} className="bg-emerald-500 text-white px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 hover:bg-emerald-600 transition-colors shadow-sm">
+            <span className="material-symbols-outlined text-[16px]">add</span> Afegir
           </button>
         )}
       </div>
-
-      {/* formulari de creació */}
+      
       {showCreateForm && (
-        <ItemForm
-          fields={section.fields}
-          initial={buildInitialForm(section.fields)}
-          loading={loading}
-          onSave={handleCreate}
-          onCancel={() => setShowCreateForm(false)}
-        />
+        <div className="px-6 py-4">
+          <ItemForm fields={section.fields} initial={buildInitialForm(section.fields)} loading={loading} onSave={handleCreate} onCancel={() => setShowCreateForm(false)} />
+        </div>
       )}
 
-      {/* llista d'elements */}
-      {items.length === 0 ? (
-        <p style={{ fontSize: '14px', color: '#aaa', margin: 0 }}>Sense elements.</p>
-      ) : (
-        <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          {items.map(item => (
-            <li key={item.id}>
-              {editingId === item.id ? (
-                <ItemForm
-                  fields={section.fields}
-                  initial={buildInitialForm(section.fields, item)}
-                  loading={loading}
-                  onSave={(data) => handleUpdate(item.id, data)}
-                  onCancel={() => setEditingId(null)}
-                />
-              ) : (
-                <div style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  padding: '10px 14px', background: '#f8f9fa',
-                  border: '1px solid #eee', borderRadius: '5px'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    {/* pastilla de color si el recurs en té */}
-                    {item.color && (
-                      <span style={{
-                        display: 'inline-block', width: '14px', height: '14px',
-                        borderRadius: '3px', background: item.color,
-                        border: '1px solid rgba(0,0,0,0.1)', flexShrink: 0
-                      }} />
-                    )}
-                    <span style={{ fontSize: '14px', color: '#2f4359', fontWeight: '500' }}>
-                      {item.name}
-                    </span>
-                    {/* camps addicionals com dies (offset_days) o is_closed */}
-                    {(item.offset_days != null || item.days != null) && (
-                      <span style={{ fontSize: '12px', color: '#888' }}>
-                        {item.offset_days ?? item.days} dies
-                      </span>
-                    )}
-                    {item.is_closed && (
-                      <span style={{
-                        fontSize: '11px', background: '#fce4e4', color: '#c0392b',
-                        borderRadius: '10px', padding: '2px 8px'
-                      }}>
-                        Tancat
-                      </span>
-                    )}
-                  </div>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <button
-                      onClick={() => setEditingId(item.id)}
-                      style={{
-                        background: 'transparent', border: '1px solid #4c8bf5',
-                        color: '#4c8bf5', borderRadius: '5px', padding: '5px 10px',
-                        cursor: 'pointer', fontSize: '12px'
-                      }}
-                    >
-                      Editar
-                    </button>
-                    <button
-                      onClick={() => handleDelete(item.id, item.name)}
-                      disabled={loading}
-                      style={{
-                        background: 'transparent', border: '1px solid #e34935',
-                        color: '#e34935', borderRadius: '5px', padding: '5px 10px',
-                        cursor: loading ? 'not-allowed' : 'pointer', fontSize: '12px'
-                      }}
-                    >
-                      Eliminar
-                    </button>
-                  </div>
+      <ul className="divide-y divide-gray-100">
+        {items.map(item => (
+          <li key={item.id} className="px-6 py-4 hover:bg-gray-50 transition-colors group">
+            {editingId === item.id ? (
+              <ItemForm fields={section.fields} initial={buildInitialForm(section.fields, item)} loading={loading} onSave={(data) => handleUpdate(item.id, data)} onCancel={() => setEditingId(null)} />
+            ) : (
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                  {item.color && <div className="w-3 h-3 rounded-full" style={{ background: item.color }} />}
+                  <span className="text-sm font-medium text-gray-800">{item.name}</span>
+                  {(item.offset_days != null || item.days != null) && <span className="text-xs text-gray-400">{item.offset_days ?? item.days} dies</span>}
+                  {item.is_closed && <span className="text-[10px] bg-red-50 text-red-600 px-2 py-0.5 rounded-full font-semibold uppercase">Tancat</span>}
                 </div>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
+                <div className="flex gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button onClick={() => setEditingId(item.id)} className="text-xs font-bold text-gray-400 hover:text-emerald-600 uppercase">Editar</button>
+                  <button onClick={() => handleDelete(item.id, item.name)} className="text-xs font-bold text-gray-400 hover:text-red-600 uppercase">Eliminar</button>
+                </div>
+              </div>
+            )}
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
-// component principal del panell de configuració
 export default function SettingsPanel({ onBack, onShowNotification }) {
-  const {
-    currentUser,
-    statuses,          refreshStatuses,
-    issueTypes,        refreshIssueTypes,
-    priorities,        refreshPriorities,
-    severities,        refreshSeverities,
-    tags,              refreshTags,
-    deadlineShortcuts, refreshDeadlineShortcuts
-  } = useContext(UserContext);
+  const { currentUser, statuses, refreshStatuses, issueTypes, refreshIssueTypes, priorities, refreshPriorities, severities, refreshSeverities, tags, refreshTags, deadlineShortcuts, refreshDeadlineShortcuts } = useContext(UserContext);
 
-  // mapa de dades per secció, associat per key
   const dataMap = {
-    statuses:          { items: statuses,          refresh: refreshStatuses },
-    priorities:        { items: priorities,        refresh: refreshPriorities },
-    issueTypes:        { items: issueTypes,         refresh: refreshIssueTypes },
-    severities:        { items: severities,        refresh: refreshSeverities },
-    tags:              { items: tags,              refresh: refreshTags },
+    statuses: { items: statuses, refresh: refreshStatuses },
+    priorities: { items: priorities, refresh: refreshPriorities },
+    issueTypes: { items: issueTypes, refresh: refreshIssueTypes },
+    severities: { items: severities, refresh: refreshSeverities },
+    tags: { items: tags, refresh: refreshTags },
     deadlineShortcuts: { items: deadlineShortcuts, refresh: refreshDeadlineShortcuts }
   };
 
   return (
-    <div className="panel" style={{ maxWidth: '860px', margin: '0 auto', padding: '30px' }}>
-      {/* capçalera */}
-      <div style={{
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        marginBottom: '30px', borderBottom: '2px solid #f0f0f0', paddingBottom: '20px'
-      }}>
+    <div className="max-w-5xl mx-auto p-6">
+      <div className="mb-8 flex items-center justify-between">
         <div>
-          <h2 style={{ margin: '0 0 4px 0', fontSize: '22px', color: '#2f4359' }}>
-            Configuració
-          </h2>
-          <p style={{ margin: 0, fontSize: '13px', color: '#888' }}>
-            Gestiona les llistes d'atributs de les incidències
-          </p>
+          <h2 className="text-2xl font-bold text-gray-900">Configuració</h2>
+          <p className="text-sm text-gray-500 mt-1">Gestiona els paràmetres del sistema i taxonomies globals.</p>
         </div>
-        <button onClick={onBack} className="btn btn-secondary">
-          Tornar
-        </button>
+        <button onClick={onBack} className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-50">Tornar</button>
       </div>
-
-      {/* seccions */}
-      {SECTIONS.map(section => {
-        const { items, refresh } = dataMap[section.key] ?? { items: [], refresh: () => {} };
-        return (
-          <SettingsSection
-            key={section.key}
-            section={section}
-            items={items}
-            refresh={refresh}
-            apiKey={currentUser.apiKey}
-            onShowNotification={onShowNotification}
-          />
-        );
-      })}
+      
+      {SECTIONS.map(section => (
+        <SettingsSection key={section.key} section={section} items={dataMap[section.key]?.items || []} refresh={dataMap[section.key]?.refresh} apiKey={currentUser.apiKey} onShowNotification={onShowNotification} />
+      ))}
     </div>
   );
 }
