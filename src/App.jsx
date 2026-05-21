@@ -6,12 +6,20 @@ import IssueDetail from './components/IssueDetail';
 import SettingsPanel from './components/SettingsPanel';
 import Toast from './components/Toast';
 import './App.css';
+import UserProfile from './components/UserProfile';
 
 function App() {
   const [currentView, setCurrentView] = useState('list');
   const [selectedIssue, setSelectedIssue] = useState(null);
 
   const [toast, setToast] = useState({ message: '', type: '' });
+
+  const [selectedProfileId, setSelectedProfileId] = useState(null);
+
+  const goToProfile = (userId) => {
+    setSelectedProfileId(userId);
+    setCurrentView('profile');
+  };
 
   const showNotification = (message, type = 'success') => {
     setToast({ message, type });
@@ -42,6 +50,7 @@ function App() {
           onNavigateToSettings={() => setCurrentView('settings')}
           onViewDetail={goToDetail}
           onShowNotification={showNotification}
+          onNavigateToProfile={goToProfile}
         />
       )}
 
@@ -49,6 +58,7 @@ function App() {
         <BulkInsert
           onBack={goToList}
           onShowNotification={showNotification}
+          onNavigateToProfile={goToProfile}
         />
       )}
 
@@ -57,6 +67,7 @@ function App() {
           onBack={goToList}
           issueToEdit={selectedIssue}
           onShowNotification={showNotification}
+          onNavigateToProfile={goToProfile}
         />
       )}
 
@@ -66,6 +77,7 @@ function App() {
           onBack={goToList}
           onEdit={goToEdit}
           onShowNotification={showNotification}
+          onNavigateToProfile={goToProfile}
         />
       )}
 
@@ -73,6 +85,16 @@ function App() {
         <SettingsPanel
           onBack={goToList}
           onShowNotification={showNotification}
+          onNavigateToProfile={goToProfile}
+        />
+      )}
+
+      {currentView === 'profile' && (
+        <UserProfile
+          userId={selectedProfileId}
+          onBack={goToList}
+          onShowNotification={showNotification}
+          onNavigateToProfile={goToProfile}
         />
       )}
 

@@ -5,7 +5,7 @@ export const USERS = [
   { id: 4, name: "Sergi",   apiKey: "d2a157a572db39ed25cc9ffea7ee1b12" },
   { id: 2, name: "Victor",  apiKey: "a965d68e049cb45e49386312fa7a83b6" },
   { id: 5, name: "Claudia", apiKey: "8135aea2ddebc220d40bad00212fdf35" },
-  { id: 3, name: "Adria",   apiKey: "TU_API_KEY_AQUI_4" }
+  { id: 3, name: "Adria",   apiKey: "1d0371aa733b6ff9f7bbd56c50e62692" }
 ];
 
 export const UserContext = createContext();
