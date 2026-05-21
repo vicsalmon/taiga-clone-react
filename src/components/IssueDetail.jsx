@@ -309,7 +309,6 @@ export default function IssueDetail({ issueId, onBack, onEdit, onShowNotificatio
                   <span className="material-symbols-outlined text-gray-400">cloud_upload</span>
                 </div>
                 <p className="text-sm font-medium text-gray-800 mb-1">Arrossega els fitxers aquí o fes clic per pujar-los</p>
-                <p className="text-xs text-gray-500">Qualsevol format, pujada instantània</p>
               </div>
 
               {attachments.length > 0 && (
