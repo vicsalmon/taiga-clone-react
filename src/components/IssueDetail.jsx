@@ -3,7 +3,6 @@ import { UserContext } from '../context/UserContext';
 import { issueService } from '../services/issueService';
 
 export default function IssueDetail({ issueId, onBack, onEdit, onShowNotification }) {
-  // Extraemos las listas dinámicas y datos del usuario actual
   const { currentUser, USERS, statuses, issueTypes, priorities, severities } = useContext(UserContext);
   const [issue, setIssue] = useState(null);
   const [attachments, setAttachments] = useState([]);
@@ -14,7 +13,6 @@ export default function IssueDetail({ issueId, onBack, onEdit, onShowNotificatio
       try {
         const issueData = await issueService.getById(currentUser.apiKey, issueId);
         setIssue(issueData);
-
         const attachmentsData = await issueService.getAttachments(currentUser.apiKey, issueId);
         setAttachments(attachmentsData);
       } catch (error) {
@@ -28,7 +26,6 @@ export default function IssueDetail({ issueId, onBack, onEdit, onShowNotificatio
   }, [issueId, currentUser.apiKey, onShowNotification]);
 
   const handleDelete = async () => {
-    // mantenim el confirm natiu nomes per a accions destructives critiques globals
     const confirm = window.confirm("N'estàs segur que vols eliminar aquesta incidència? Aquesta acció no es pot desfer.");
     if (!confirm) return;
 
@@ -78,7 +75,7 @@ export default function IssueDetail({ issueId, onBack, onEdit, onShowNotificatio
       await issueService.uploadAttachment(currentUser.apiKey, issueId, file);
       const updatedAttachments = await issueService.getAttachments(currentUser.apiKey, issueId);
       setAttachments(updatedAttachments);
-      e.target.value = null; // Reinicia el input file
+      e.target.value = null;
       onShowNotification('Fitxer pujat correctament.', 'success');
     } catch (error) {
       console.error(error);
@@ -97,7 +94,6 @@ export default function IssueDetail({ issueId, onBack, onEdit, onShowNotificatio
     }
   };
 
-  // Funciones helper para obtener los nombres visuales
   const getName = (list, id) => list?.find(item => item.id === id)?.name || "Desconegut";
 
   if (loading) return <div className="panel" style={{textAlign: 'center', padding: '50px'}}>Carregant detall...</div>;
@@ -105,7 +101,6 @@ export default function IssueDetail({ issueId, onBack, onEdit, onShowNotificatio
 
   return (
     <div className="panel" style={{ maxWidth: '1000px', margin: '0 auto', padding: '30px' }}>
-      
       <div className="detail-header" style={{ marginBottom: '30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div className="detail-title-block">
           <span className="detail-id" style={{ color: '#888', marginRight: '10px' }}>#{issue.id}</span>
@@ -119,8 +114,6 @@ export default function IssueDetail({ issueId, onBack, onEdit, onShowNotificatio
       </div>
 
       <div className="detail-grid" style={{ display: 'flex', gap: '40px' }}>
-        
-        {/* COLUMNA PRINCIPAL (Descripción + Adjuntos) */}
         <div style={{ flex: 2, display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div className="description-panel panel" style={{boxShadow: 'none', border: '1px solid #eee', padding: '20px', borderRadius: '5px'}}>
             <h4 style={{ margin: '0 0 15px 0', color: 'var(--primary)', textTransform: 'uppercase', fontSize: '13px' }}>Descripció</h4>
@@ -131,7 +124,6 @@ export default function IssueDetail({ issueId, onBack, onEdit, onShowNotificatio
 
           <div className="attachments-panel panel" style={{boxShadow: 'none', border: '1px solid #eee', padding: '20px', borderRadius: '5px'}}>
             <h4 style={{ margin: '0 0 15px 0', color: 'var(--primary)', textTransform: 'uppercase', fontSize: '13px' }}>Fitxers Adjunts</h4>
-            
             <ul style={{ listStyleType: 'none', padding: 0, margin: '0 0 15px 0' }}>
               {attachments.map(att => (
                 <li key={att.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', padding: '10px', background: '#f8f9fa', border: '1px solid #eee', borderRadius: '4px' }}>
@@ -145,6 +137,55 @@ export default function IssueDetail({ issueId, onBack, onEdit, onShowNotificatio
               ))}
               {attachments.length === 0 && <p style={{ fontSize: '14px', color: '#888', margin: 0 }}>No hi ha cap fitxer adjunt.</p>}
             </ul>
-
             <div>
               <input type="file" onChange={handleFileUpload} style={{ fontSize: '14px' }} />
+            </div>
+          </div>
+        </div>
+
+        <div className="sidebar-panel" style={{ background: '#f8f9fa', padding: '25px', borderRadius: '6px', border: '1px solid #eee', alignSelf: 'start', flex: 1 }}>
+          <h4 style={{ fontSize: '12px', textTransform: 'uppercase', color: '#888', borderBottom: '1px solid #ddd', paddingBottom: '10px', marginBottom: '20px', marginTop: 0 }}>
+            Atributs
+          </h4>
+          <div className="meta-item" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '5px', marginBottom: '15px' }}>
+            <span className="meta-label" style={{ fontWeight: 'bold', fontSize: '14px' }}>Assignat a</span>
+            <select 
+              value={issue.assigned_to_id || ""} 
+              onChange={handleAssign} 
+              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+            >
+              <option value="">Sense assignar</option>
+              {USERS.map((u) => (
+                <option key={u.id} value={u.id}>{u.name}</option>
+              ))}
+            </select>
+          </div>
+          <div className="meta-item" style={{ marginBottom: '15px' }}>
+            <span className="meta-label" style={{ fontWeight: 'bold', fontSize: '14px' }}>Tipus:</span>
+            <span style={{fontWeight: '500', marginLeft: '10px'}}>{getName(issueTypes, issue.issue_type_id)}</span>
+          </div>
+          <div className="meta-item" style={{ marginBottom: '15px' }}>
+            <span className="meta-label" style={{ fontWeight: 'bold', fontSize: '14px' }}>Estat:</span>
+            <span style={{fontWeight: '500', background: '#e4e6ea', padding: '2px 8px', borderRadius: '10px', fontSize: '12px', marginLeft: '10px'}}>
+              {getName(statuses, issue.status_id)}
+            </span>
+          </div>
+          <div className="meta-item" style={{ marginBottom: '15px' }}>
+            <span className="meta-label" style={{ fontWeight: 'bold', fontSize: '14px' }}>Prioritat:</span>
+            <span style={{ marginLeft: '10px' }}>{getName(priorities, issue.priority_id)}</span>
+          </div>
+          <div className="meta-item" style={{ marginBottom: '15px' }}>
+            <span className="meta-label" style={{ fontWeight: 'bold', fontSize: '14px' }}>Severitat:</span>
+            <span style={{ marginLeft: '10px' }}>{getName(severities, issue.severity_id)}</span>
+          </div>
+          <div className="meta-item" style={{ borderTop: '1px solid #eee', paddingTop: '15px', marginTop: '15px' }}>
+            <span className="meta-label" style={{ fontWeight: 'bold', fontSize: '14px' }}>Data Límit:</span>
+            <span style={{ color: issue.deadline ? '#333' : '#aaa', marginLeft: '10px' }}>
+              {issue.deadline ? new Date(issue.deadline).toLocaleDateString() : "Sense especificar"}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
