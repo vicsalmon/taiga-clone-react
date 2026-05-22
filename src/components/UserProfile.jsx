@@ -1,12 +1,14 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { UserContext } from '../context/UserContext';
+import UserAvatar from './UserAvatar';
 
 export default function UserProfile({ 
   userId, 
   onBack, 
   onShowNotification, 
   onNavigateToEdit, 
-  onViewDetail //Necessitem rebre aquesta prop des d'App.jsx per navegar a la incidència del comentari
+  onViewDetail, //Necessitem rebre aquesta prop des d'App.jsx per navegar a la incidència del comentari
+  onNavigateToProfile
 }) {
   const { getUserNameById, currentUser, statuses, issueTypes, priorities, severities } = useContext(UserContext);
   
@@ -69,11 +71,41 @@ export default function UserProfile({
           if (resWatched.ok) setWatchedIssues(await resWatched.json());
         }
 
-        // Cargar Comentarios
-        const resComments = await fetch(`https://taiga-app.onrender.com/api/v1/users/${userId}/comments`, {
+        // Cargar Comentarios (recuperando todas las issues y sus comentarios, ya que no hay endpoint directo)
+        const resIssues = await fetch(`https://taiga-app.onrender.com/api/v1/issues`, {
           headers: { 'X-Api-Key': currentUser.apiKey, 'Accept': 'application/json' }
         });
-        if (resComments.ok) setComments(await resComments.json());
+        if (resIssues.ok) {
+          const allIssues = await resIssues.json();
+          const commentsPromises = allIssues.map(async (issue) => {
+            try {
+              const resComments = await fetch(`https://taiga-app.onrender.com/api/v1/issues/${issue.id}/comments`, {
+                headers: { 'X-Api-Key': currentUser.apiKey, 'Accept': 'application/json' }
+              });
+              if (resComments.ok) {
+                const issueComments = await resComments.json();
+                return issueComments.map(c => ({
+                  ...c,
+                  issue: {
+                    id: issue.id,
+                    subject: issue.subject
+                  }
+                }));
+              }
+            } catch (err) {
+              console.error(`Error carregant comentaris per a la issue ${issue.id}`, err);
+            }
+            return [];
+          });
+          const allCommentsNested = await Promise.all(commentsPromises);
+          const allComments = allCommentsNested.flat();
+          const filteredComments = allComments.filter(c => {
+            const commentAuthorId = parseInt(c.user_id || c.user?.id || c.created_by?.id || c.author?.id, 10);
+            return commentAuthorId === parseInt(userId, 10);
+          });
+          filteredComments.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+          setComments(filteredComments);
+        }
 
       } catch (err) {
         console.error("Error al cargar datos", err);
@@ -86,10 +118,23 @@ export default function UserProfile({
 
   //Gestor d'ordenació
   const handleSort = (column) => {
-    setSortConfig(prev => ({
-      column,
-      direction: prev.column === column && prev.direction === 'asc' ? 'desc' : 'asc'
-    }));
+    setSortConfig(prev => {
+      const isCurrent = prev.column === column;
+      if (!isCurrent) {
+        return { column, direction: 'asc' };
+      }
+      if (prev.direction === 'asc') {
+        return { column, direction: 'desc' };
+      }
+      return { column: 'id', direction: 'desc' };
+    });
+  };
+
+  const renderSortIndicator = (field) => {
+    if (sortConfig.column !== field) return <span className="text-gray-400">↕</span>;
+    return (
+      <span className="text-sm">{sortConfig.direction === 'asc' ? '▲' : '▼'}</span>
+    );
   };
 
   //Funcions per mostrar noms i colors (Helpers)
@@ -139,40 +184,173 @@ export default function UserProfile({
 
   //Renderitzat de la taula d'issues (Reutilitzable per assigned i watched)
   const renderIssuesTable = (issuesList) => (
-    <div className="bg-white border rounded-lg shadow-sm overflow-hidden mt-4">
-      <table className="min-w-full text-left text-sm">
-        <thead className="bg-gray-50 border-b text-gray-600">
-          <tr>
-            {['issue_type_id', 'severity_id', 'id', 'subject','status_id', 'updated_at'].map((col, idx) => {
-              const labels = ['Type', 'Severity', 'Issue #', 'Subject', 'Status', 'Modified'];
-              return (
-                <th key={col} className="px-4 py-3 font-medium cursor-pointer hover:bg-gray-100" onClick={() => handleSort(col)}>
-                  {labels[idx]} {sortConfig.column === col ? (sortConfig.direction === 'asc' ? '↑' : '↓') : ''}
+    <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mt-4">
+      <div className="overflow-x-auto">
+        <table className="w-full text-left text-sm border-collapse whitespace-nowrap">
+          <thead>
+            <tr className="border-b border-gray-200 bg-gray-50">
+              {[
+                { key: 'id', label: 'ID' },
+                { key: 'subject', label: 'Subjecte' },
+                { key: 'status', label: 'Estat' },
+                { key: 'type', label: 'Tipus' },
+                { key: 'priority', label: 'Prioritat' },
+                { key: 'severity', label: 'Severitat' },
+                { key: 'deadline', label: 'Deadline' },
+                { key: 'creator', label: 'Creador' },
+                { key: 'assignee', label: 'Assignat' },
+                { key: 'updated_at', label: 'Modificada' }
+              ].map(({ key, label }) => (
+                <th key={key} className="px-5 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  <button 
+                    type="button" 
+                    onClick={() => handleSort(key)} 
+                    className="flex items-center gap-1 text-left w-full text-gray-500 hover:text-emerald-600 transition-colors"
+                  >
+                    {label} {renderSortIndicator(key)}
+                  </button>
                 </th>
-              );
-            })}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-100">
-          {issuesList.length > 0 ? issuesList.map(issue => (
-            <tr key={issue.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => onViewDetail && onViewDetail(issue.id)}>
-              <td className="px-4 py-3"><span style={{ color: getColor(issueTypes, issue.issue_type_id) }}>{getName(issueTypes, issue.issue_type_id)}</span></td>
-              <td className="px-4 py-3"><span style={{ color: getColor(severities, issue.severity_id) }}>{getName(severities, issue.severity_id)}</span></td>
-              <td className="px-4 py-3 font-bold text-gray-500">#{issue.id}</td>
-              <td className="px-4 py-3 font-semibold text-emerald-600">{issue.subject}</td>
-              <td className="px-4 py-3">
-                <span className="px-2 py-1 text-xs rounded-sm text-white" style={{ backgroundColor: getColor(statuses, issue.status_id) }}>
-                  {getName(statuses, issue.status_id)}
-                </span>
-              </td>
-              <td className="px-4 py-3 text-gray-500">{new Date(issue.updated_at).toLocaleDateString()}</td>
+              ))}
             </tr>
-          )) : (
-            <tr><td colSpan="5" className="px-4 py-8 text-center text-gray-500">No hi ha incidències per mostrar.</td></tr>
-          )}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody className="text-sm text-gray-800 divide-y divide-gray-100">
+            {issuesList.length > 0 ? issuesList.map((issue, index) => {
+              const statusName = getName(statuses, issue.status_id);
+              const statusColor = getColor(statuses, issue.status_id);
+              const typeColor = getColor(issueTypes, issue.issue_type_id);
+              const priorityColor = getColor(priorities, issue.priority_id);
+              const severityColor = getColor(severities, issue.severity_id);
+              
+              return (
+                <tr 
+                  key={issue.id || index} 
+                  className="border-b border-gray-100 hover:bg-gray-50 transition-colors group cursor-pointer"
+                  onClick={() => onViewDetail && onViewDetail(issue.id)}
+                >
+                  {/* ID */}
+                  <td className="px-5 py-4 text-gray-400 font-medium">#{issue.id}</td>
+                  
+                  {/* Subjecte */}
+                  <td className="px-5 py-4 font-semibold text-gray-900 cursor-pointer hover:text-emerald-600 transition-colors">
+                    {issue.subject}
+                  </td>
+                  
+                  {/* Estat */}
+                  <td className="px-5 py-4">
+                    <span 
+                      className="px-3 py-1 rounded-full text-xs font-semibold inline-flex items-center border"
+                      style={{ 
+                        backgroundColor: `${statusColor}15`, 
+                        color: statusColor, 
+                        borderColor: `${statusColor}30` 
+                      }}
+                    >
+                      {statusName}
+                    </span>
+                  </td>
+                  
+                  {/* Tipus */}
+                  <td className="px-5 py-4">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: typeColor }}></span>
+                      {getName(issueTypes, issue.issue_type_id)}
+                    </div>
+                  </td>
+                  
+                  {/* Prioritat */}
+                  <td className="px-5 py-4">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: priorityColor }}></span>
+                      {getName(priorities, issue.priority_id)}
+                    </div>
+                  </td>
+                  
+                  {/* Severitat */}
+                  <td className="px-5 py-4">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: severityColor }}></span>
+                      {getName(severities, issue.severity_id)}
+                    </div>
+                  </td>
+                  
+                  {/* Deadline */}
+                  <td className="px-5 py-4 text-gray-500">
+                    {issue.deadline ? new Date(issue.deadline).toLocaleDateString() : "-"}
+                  </td>
+                  
+                  {/* Creador */}
+                  <td className="px-5 py-4 text-gray-600">
+                    <div className="flex items-center gap-2">
+                      <UserAvatar 
+                        userId={issue.user_id} 
+                        onClick={(e) => { 
+                          if (onNavigateToProfile) {
+                            e.stopPropagation(); 
+                            onNavigateToProfile(issue.user_id); 
+                          }
+                        }} 
+                      />
+                      <span 
+                        onClick={(e) => { 
+                          if (onNavigateToProfile) {
+                            e.stopPropagation(); 
+                            onNavigateToProfile(issue.user_id); 
+                          }
+                        }} 
+                        className="cursor-pointer hover:text-emerald-600 hover:underline font-medium"
+                      >
+                        {getUserNameById(issue.user_id)}
+                      </span>
+                    </div>
+                  </td>
+                  
+                  {/* Assignat */}
+                  <td className="px-5 py-4 text-gray-600">
+                    {issue.assigned_to_id ? (
+                      <div className="flex items-center gap-2">
+                        <UserAvatar 
+                          userId={issue.assigned_to_id} 
+                          onClick={(e) => { 
+                            if (onNavigateToProfile) {
+                              e.stopPropagation(); 
+                              onNavigateToProfile(issue.assigned_to_id); 
+                            }
+                          }} 
+                        />
+                        <span 
+                          onClick={(e) => { 
+                            if (onNavigateToProfile) {
+                              e.stopPropagation(); 
+                              onNavigateToProfile(issue.assigned_to_id); 
+                            }
+                          }} 
+                          className="cursor-pointer hover:text-emerald-600 hover:underline font-medium"
+                        >
+                          {getUserNameById(issue.assigned_to_id)}
+                        </span>
+                      </div>
+                    ) : (
+                      "-"
+                    )}
+                  </td>
+                  
+                  {/* Modificada */}
+                  <td className="px-5 py-4 text-gray-500">
+                    {new Date(issue.updated_at).toLocaleDateString()}
+                  </td>
+                </tr>
+              );
+            }) : (
+              <tr>
+                <td colSpan="10" className="px-5 py-8 text-center text-gray-500">
+                  No hi ha incidències per mostrar.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </section>
   );
 
   return (
@@ -223,7 +401,7 @@ export default function UserProfile({
                 {assignedIssues.length}
               </span>
               <span style={{ fontSize: '11px', color: '#6b7280', lineHeight: '1.2', display: 'block' }}>
-                Open<br />Assigned
+                Assignades<br />Obertes
               </span>
             </div>
 
@@ -239,7 +417,7 @@ export default function UserProfile({
                 {currentUser?.id === userId ? watchedIssues.length : '-'}
               </span>
               <span style={{ fontSize: '11px', color: '#6b7280', lineHeight: '1.2', display: 'block' }}>
-                Watched<br />Issues
+                Seguides<br />Incidències
               </span>
             </div>
 
@@ -255,7 +433,7 @@ export default function UserProfile({
                 {comments.length} {/* AQUÍ CONTAMOS LA LISTA REAL */}
               </span>
               <span style={{ fontSize: '11px', color: '#6b7280', lineHeight: '1.2', display: 'block' }}>
-                Comments
+                Comentaris
               </span>
             </div>
           </div>
@@ -282,14 +460,14 @@ export default function UserProfile({
 
 
       {/* --- CONTINGUT PRINCIPAL DRET (Pestanyes) --- */}
-      <div className="w-full md:w-3/4">
+      <div className="w-full md:w-3/4 min-w-0">
         {/* Capçalera Pestanyes */}
         <div className="flex border-b border-gray-200 gap-6">
           <button 
             onClick={() => setActiveTab('assigned')}
             className={`pb-3 font-medium text-sm transition-colors ${activeTab === 'assigned' ? 'border-b-2 border-emerald-500 text-emerald-600' : 'text-gray-500 hover:text-gray-700'}`}
           >
-            Open Assigned Issues
+            Incidències assignades obertes
           </button>
 
           {isCurrentUser && (
@@ -297,7 +475,7 @@ export default function UserProfile({
               onClick={() => setActiveTab('watched')}
               className={`pb-3 font-medium text-sm transition-colors ${activeTab === 'watched' ? 'border-b-2 border-emerald-500 text-emerald-600' : 'text-gray-500 hover:text-gray-700'}`}
             >
-              Watched Issues
+              Incidències seguides
             </button>
           )}
 
@@ -305,7 +483,7 @@ export default function UserProfile({
             onClick={() => setActiveTab('comments')}
             className={`pb-3 font-medium text-sm transition-colors ${activeTab === 'comments' ? 'border-b-2 border-emerald-500 text-emerald-600' : 'text-gray-500 hover:text-gray-700'}`}
           >
-            Comments
+            Comentaris
           </button>
         </div>
 

@@ -97,6 +97,7 @@ function App() {
           onShowNotification={showNotification}
           onNavigateToProfile={goToProfile}
           onNavigateToEdit={() => setCurrentView('EDIT_PROFILE')}
+          onViewDetail={goToDetail}
         />
       )}
 

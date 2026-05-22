@@ -33,8 +33,8 @@ export default function EditProfile({ userId, onBack, onShowNotification }) {
           }
         }
       } catch (error) {
-        console.error("Error cargando el perfil:", error);
-        onShowNotification("Error al cargar los datos del perfil", "error");
+        console.error("Error carregant el perfil:", error);
+        onShowNotification("Error en carregar les dades del perfil", "error");
       } finally {
         setInitialLoading(false);
       }
@@ -82,16 +82,16 @@ export default function EditProfile({ userId, onBack, onShowNotification }) {
       });
 
       if (response.ok) {
-        onShowNotification("¡Perfil actualizado con éxito!", "success");
+        onShowNotification("Perfil actualitzat amb èxit!", "success");
         onBack(); // Volver a la vista del perfil
       } else {
         const errorData = await response.json();
         console.error("Error del servidor:", errorData);
-        onShowNotification("Error al actualizar el perfil", "error");
+        onShowNotification("Error en actualitzar el perfil", "error");
       }
     } catch (error) {
-      console.error("Error de red:", error);
-      onShowNotification("Error de conexión con el servidor", "error");
+      console.error("Error de xarxa:", error);
+      onShowNotification("Error de connexió amb el servidor", "error");
     } finally {
       setLoading(false);
     }
@@ -99,7 +99,7 @@ export default function EditProfile({ userId, onBack, onShowNotification }) {
 
   //Pantalla de carga mientras trae los datos iniciales
   if (initialLoading) {
-    return <div className="text-center mt-20 text-gray-500">Cargando datos del perfil...</div>;
+    return <div className="text-center mt-20 text-gray-500">Carregant dades del perfil...</div>;
   }
 
   return (
@@ -109,9 +109,9 @@ export default function EditProfile({ userId, onBack, onShowNotification }) {
         <button 
           onClick={onBack}
           className="text-gray-500 hover:text-gray-700 transition-colors"
-          title="Volver"
+          title="Tornar"
         >
-          ✕ Cancelar
+          ✕ Cancel·lar
         </button>
       </div>
       
@@ -146,10 +146,10 @@ export default function EditProfile({ userId, onBack, onShowNotification }) {
                 onClick={() => fileInputRef.current.click()}
                 className="px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded hover:bg-gray-200 transition-colors text-sm"
               >
-                Cambiar Imagen
+                Canviar Imatge
               </button>
               <p className="text-xs text-gray-500 mt-2">
-                Recomendado: Imagen cuadrada (JPG, PNG).
+                Recomanat: Imatge quadrada (JPG, PNG).
               </p>
             </div>
           </div>
@@ -158,12 +158,12 @@ export default function EditProfile({ userId, onBack, onShowNotification }) {
         {/* SECCIÓN BIOGRAFÍA */}
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Biografía / Descripción
+            Biografia / Descripció
           </label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Cuéntanos un poco sobre ti..."
+            placeholder="Explica'ns una mica sobre tu..."
             className="w-full border border-gray-300 rounded-lg p-3 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all resize-y"
             rows="5"
           />
@@ -176,7 +176,7 @@ export default function EditProfile({ userId, onBack, onShowNotification }) {
             disabled={loading}
             className={`px-6 py-2 bg-emerald-500 text-white font-medium rounded-lg transition-colors flex items-center gap-2 ${loading ? 'opacity-70 cursor-not-allowed' : 'hover:bg-emerald-600'}`}
           >
-            {loading ? 'Guardando...' : 'Guardar Cambios'}
+            {loading ? 'Desant...' : 'Desar canvis'}
           </button>
           <button 
             type="button" 
@@ -184,7 +184,7 @@ export default function EditProfile({ userId, onBack, onShowNotification }) {
             disabled={loading}
             className="px-6 py-2 text-gray-600 font-medium rounded-lg hover:bg-gray-100 transition-colors"
           >
-            Cancelar
+            Cancel·lar
           </button>
         </div>
       </form>
