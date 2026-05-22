@@ -53,33 +53,36 @@ export default function UserProfile({
 
   //Carregar el contingut de les pestanyes (amb ordenació)
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchAllData = async () => {
       try {
-        if (activeTab === 'assigned') {
-          const res = await fetch(`https://taiga-app.onrender.com/api/v1/users/${userId}/assigned_issues?sort=${sortConfig.column}&direction=${sortConfig.direction}`, {
+        // Cargar Assigned Issues
+        const resAssigned = await fetch(`https://taiga-app.onrender.com/api/v1/users/${userId}/assigned_issues?sort=${sortConfig.column}&direction=${sortConfig.direction}`, {
+          headers: { 'X-Api-Key': currentUser.apiKey, 'Accept': 'application/json' }
+        });
+        if (resAssigned.ok) setAssignedIssues(await resAssigned.json());
+
+        // Cargar Watched Issues (solo si es el usuario logueado)
+        if (isCurrentUser) {
+          const resWatched = await fetch(`https://taiga-app.onrender.com/api/v1/users/${userId}/watched_issues?sort=${sortConfig.column}&direction=${sortConfig.direction}`, {
             headers: { 'X-Api-Key': currentUser.apiKey, 'Accept': 'application/json' }
           });
-          if (res.ok) setAssignedIssues(await res.json());
-        } 
-        else if (activeTab === 'watched' && isCurrentUser) {
-          const res = await fetch(`https://taiga-app.onrender.com/api/v1/users/${userId}/watched_issues?sort=${sortConfig.column}&direction=${sortConfig.direction}`, {
-            headers: { 'X-Api-Key': currentUser.apiKey, 'Accept': 'application/json' }
-          });
-          if (res.ok) setWatchedIssues(await res.json());
+          if (resWatched.ok) setWatchedIssues(await resWatched.json());
         }
-        else if (activeTab === 'comments') {
-          // Nota: Assegura't de tenir aquest endpoint al backend!
-          const res = await fetch(`https://taiga-app.onrender.com/api/v1/users/${userId}/comments`, {
-            headers: { 'X-Api-Key': currentUser.apiKey, 'Accept': 'application/json' }
-          });
-          if (res.ok) setComments(await res.json());
-        }
+
+        // Cargar Comentarios
+        const resComments = await fetch(`https://taiga-app.onrender.com/api/v1/users/${userId}/comments`, {
+          headers: { 'X-Api-Key': currentUser.apiKey, 'Accept': 'application/json' }
+        });
+        if (resComments.ok) setComments(await resComments.json());
+
       } catch (err) {
-        console.error("Error carregant dades de la pestanya", err);
+        console.error("Error al cargar datos", err);
       }
     };
-    fetchData();
-  }, [userId, activeTab, sortConfig, currentUser.apiKey, isCurrentUser]);
+    
+    if (userId) fetchAllData();
+    // Quitamos 'activeTab' de las dependencias para que cargue todo al principio
+  }, [userId, sortConfig, currentUser.apiKey, isCurrentUser]);
 
   //Gestor d'ordenació
   const handleSort = (column) => {
@@ -197,6 +200,65 @@ export default function UserProfile({
         
         {userApiData && userApiData.email && (
           <p className="text-gray-500 text-sm mb-6">@{userApiData.email.split('@')[0]}</p>
+        )}
+
+        {/*CONTADORES ESTILO TAIGA de las pestañas === */}
+        {userApiData && (
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            gap: '12px', 
+            marginTop: '15px',
+            marginBottom: '15px' 
+          }}>
+            {/* Open Assigned */}
+            <div style={{ 
+              backgroundColor: '#f3f4f6', 
+              padding: '10px', 
+              borderRadius: '8px', 
+              minWidth: '85px', 
+              textAlign: 'center' 
+            }}>
+              <span style={{ display: 'block', fontSize: '18px', fontWeight: 'bold', color: '#10b981' }}>
+                {assignedIssues.length}
+              </span>
+              <span style={{ fontSize: '11px', color: '#6b7280', lineHeight: '1.2', display: 'block' }}>
+                Open<br />Assigned
+              </span>
+            </div>
+
+            {/* Watched Issues */}
+            <div style={{ 
+              backgroundColor: '#f3f4f6', 
+              padding: '10px', 
+              borderRadius: '8px', 
+              minWidth: '85px', 
+              textAlign: 'center' 
+            }}>
+              <span style={{ display: 'block', fontSize: '18px', fontWeight: 'bold', color: '#3b82f6' }}>
+                {currentUser?.id === userId ? watchedIssues.length : '-'}
+              </span>
+              <span style={{ fontSize: '11px', color: '#6b7280', lineHeight: '1.2', display: 'block' }}>
+                Watched<br />Issues
+              </span>
+            </div>
+
+            {/* Comments */}
+            <div style={{ 
+              backgroundColor: '#f3f4f6', 
+              padding: '10px', 
+              borderRadius: '8px', 
+              minWidth: '85px', 
+              textAlign: 'center' 
+            }}>
+              <span style={{ display: 'block', fontSize: '18px', fontWeight: 'bold', color: '#4b5563' }}>
+                {comments.length} {/* AQUÍ CONTAMOS LA LISTA REAL */}
+              </span>
+              <span style={{ fontSize: '11px', color: '#6b7280', lineHeight: '1.2', display: 'block' }}>
+                Comments
+              </span>
+            </div>
+          </div>
         )}
 
         {/* Descripció entre l'email i el botó */}
