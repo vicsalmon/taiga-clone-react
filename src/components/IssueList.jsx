@@ -1,8 +1,9 @@
 import { useState, useEffect, useContext } from 'react';
 import { UserContext } from '../context/UserContext';
 import { issueService } from '../services/issueService';
+import UserAvatar from './UserAvatar';
 
-export default function IssueList({ onNavigateToBulk, onNavigateToCreate, onViewDetail, onNavigateToSettings }) {
+export default function IssueList({ onNavigateToBulk, onNavigateToCreate, onViewDetail, onNavigateToSettings, onNavigateToProfile}) {
   const { currentUser, setCurrentUser, USERS, getUserNameById, statuses, issueTypes, priorities, severities } = useContext(UserContext);
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -75,12 +76,13 @@ export default function IssueList({ onNavigateToBulk, onNavigateToCreate, onView
           </button>
           
           <div className="flex items-center gap-2 pl-4 border-l border-gray-200 ml-2">
-             <img 
-               alt="User profile" 
-               className="w-8 h-8 rounded-full border border-gray-200" 
-               src={`https://ui-avatars.com/api/?name=${currentUser.name}&background=f3f4f6&color=333`} 
+             {/* COMPONENT USER AVATAR A LA CABECERA */}
+             <UserAvatar 
+               userId={currentUser.id} 
+               size="w-9 h-9" 
+               onClick={() => onNavigateToProfile(currentUser.id)} 
              />
-             <div className="relative flex items-center hidden sm:flex">
+             <div className="relative flex items-center">
                <select 
                  value={currentUser.id} 
                  onChange={(e) => {
@@ -309,8 +311,42 @@ export default function IssueList({ onNavigateToBulk, onNavigateToCreate, onView
                         <td className="px-5 py-4 text-gray-500">
                           {issue.deadline ? new Date(issue.deadline).toLocaleDateString() : "-"}
                         </td>
-                        <td className="px-5 py-4 text-gray-600">{getUserNameById(issue.user_id)}</td>
-                        <td className="px-5 py-4 text-gray-600">{getUserNameById(issue.assigned_to_id)}</td>
+                        
+                        {/* COLUMNA CREADOR */}
+                        <td className="px-5 py-4 text-gray-600">
+                          <div className="flex items-center gap-2">
+                            <UserAvatar 
+                              userId={issue.user_id} 
+                              onClick={(e) => { e.stopPropagation(); onNavigateToProfile(issue.user_id); }} 
+                            />
+                            <span 
+                              onClick={(e) => { e.stopPropagation(); onNavigateToProfile(issue.user_id); }} 
+                              className="cursor-pointer hover:text-emerald-600 hover:underline font-medium"
+                            >
+                              {getUserNameById(issue.user_id)}
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* COLUMNA ASSIGNAT */}
+                        <td className="px-5 py-4 text-gray-600">
+                          {issue.assigned_to_id ? (
+                            <div className="flex items-center gap-2">
+                              <UserAvatar 
+                                userId={issue.assigned_to_id} 
+                                onClick={(e) => { e.stopPropagation(); onNavigateToProfile(issue.assigned_to_id); }} 
+                              />
+                              <span 
+                                onClick={(e) => { e.stopPropagation(); onNavigateToProfile(issue.assigned_to_id); }} 
+                                className="cursor-pointer hover:text-emerald-600 hover:underline font-medium"
+                              >
+                                {getUserNameById(issue.assigned_to_id)}
+                              </span>
+                            </div>
+                          ) : (
+                            "-"
+                          )}
+                        </td>
                       </tr>
                     );
                   })}

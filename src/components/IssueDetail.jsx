@@ -1,8 +1,9 @@
 import { useState, useEffect, useContext } from 'react';
 import { UserContext } from '../context/UserContext';
 import { issueService } from '../services/issueService';
+import UserAvatar from './UserAvatar';
 
-export default function IssueDetail({ issueId, onBack, onEdit, onShowNotification }) {
+export default function IssueDetail({ issueId, onBack, onEdit, onShowNotification, onNavigateToProfile }) {
   const { currentUser, USERS, statuses, issueTypes, priorities, severities } = useContext(UserContext);
   const [issue, setIssue] = useState(null);
   const [attachments, setAttachments] = useState([]);
@@ -309,7 +310,6 @@ export default function IssueDetail({ issueId, onBack, onEdit, onShowNotificatio
                   <span className="material-symbols-outlined text-gray-400">cloud_upload</span>
                 </div>
                 <p className="text-sm font-medium text-gray-800 mb-1">Arrossega els fitxers aquí o fes clic per pujar-los</p>
-                <p className="text-xs text-gray-500">Qualsevol format, pujada instantània</p>
               </div>
 
               {attachments.length > 0 && (
@@ -336,9 +336,14 @@ export default function IssueDetail({ issueId, onBack, onEdit, onShowNotificatio
               </h2>
               
               <div className="flex gap-4 mb-6">
-                <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold shrink-0 uppercase">
-                  {currentUser.name.charAt(0)}
-                </div>
+
+                {/* COMPONENT USER AVATAR a la caixeta de escriure el missatge*/}
+                <UserAvatar 
+                  userId={currentUser.id} 
+                  size="w-10 h-10" 
+                  onClick={() => onNavigateToProfile(currentUser.id)} 
+                />
+
                 <div className="flex-1 flex flex-col gap-3">
                   <textarea 
                     value={commentText} 
@@ -369,9 +374,12 @@ export default function IssueDetail({ issueId, onBack, onEdit, onShowNotificatio
                     <div key={comment.id} className="bg-gray-50 border border-gray-200 rounded-xl p-4">
                       <div className="flex justify-between items-start gap-4 mb-3">
                         <div className="flex items-center gap-3">
-                           <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold text-xs shrink-0 uppercase">
-                             {getCommentAuthor(comment).charAt(0)}
-                           </div>
+                            {/*COMPONENT USER AVATAR en el comentario */}
+                           <UserAvatar 
+                             userId={comment.user_id} 
+                             size="w-8 h-8" 
+                             onClick={() => onNavigateToProfile(comment.user_id)} 
+                           />
                            <div>
                              <div className="text-sm font-bold text-gray-900">{getCommentAuthor(comment)}</div>
                              <div className="text-xs text-gray-500">{new Date(comment.created_at).toLocaleString('ca-ES')}</div>

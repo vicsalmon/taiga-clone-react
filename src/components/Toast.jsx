@@ -20,7 +20,7 @@ export default function Toast({ message, type, onClose }) {
       position: 'fixed',
       bottom: '20px',
       right: '20px',
-      backgroundColor: isSuccess ? '#2e7d32' : '#d32f2f', // Verde oscuro o Rojo oscuro
+      backgroundColor: isSuccess ? '#2e7d32' : '#d32f2f',
       color: 'white',
       padding: '12px 24px',
       borderRadius: '8px',
