@@ -5,7 +5,9 @@ Aquest repositori conté el **Front-end** desenvolupat amb **React** per al **Te
 L'aplicació és un client web SPA (Single Page Application) responsive que actua com a interfície gràfica per consumir l'API REST de Ruby on Rails implementada en el lliurament anterior, permetent una gestió àgil i dinàmica de les incidències.
 
 🌍 **Entorn de Producció (Frontend en Vercel):** [https://frontend-asw-taiga-project.vercel.app/](https://frontend-asw-taiga-project.vercel.app/)  
+
 ⚙️ **API REST (Backend en Render):** [https://taiga-app.onrender.com/api/v1](https://taiga-app.onrender.com/)
+
 🌲 **Taiga Oficial:** [Projecte a tree.taiga.io](https://tree.taiga.io/project/victorsalinasmontanuy-asw2526q2-it212)
 
 ---
