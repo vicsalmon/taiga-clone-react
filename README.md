@@ -6,6 +6,7 @@ L'aplicació és un client web SPA (Single Page Application) responsive que actu
 
 🌍 **Entorn de Producció (Frontend en Vercel):** [https://frontend-asw-taiga-project.vercel.app/](https://frontend-asw-taiga-project.vercel.app/)  
 ⚙️ **API REST (Backend en Render):** [https://taiga-app.onrender.com/api/v1](https://taiga-app.onrender.com/)
+🌲 **Taiga Oficial:** [Projecte a tree.taiga.io](https://tree.taiga.io/project/victorsalinasmontanuy-asw2526q2-it212)
 
 ---
 
