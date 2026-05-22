@@ -7,6 +7,7 @@ import SettingsPanel from './components/SettingsPanel';
 import Toast from './components/Toast';
 import './App.css';
 import UserProfile from './components/UserProfile';
+import EditProfile from './components/EditProfile';
 
 function App() {
   const [currentView, setCurrentView] = useState('list');
@@ -95,6 +96,15 @@ function App() {
           onBack={goToList}
           onShowNotification={showNotification}
           onNavigateToProfile={goToProfile}
+          onNavigateToEdit={() => setCurrentView('EDIT_PROFILE')}
+        />
+      )}
+
+      {currentView === 'EDIT_PROFILE' && (
+        <EditProfile 
+          userId={selectedProfileId} 
+          onBack={() => setCurrentView('profile')} 
+          onShowNotification={showNotification} 
         />
       )}
 
