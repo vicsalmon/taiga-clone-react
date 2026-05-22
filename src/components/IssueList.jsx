@@ -82,7 +82,7 @@ export default function IssueList({ onNavigateToBulk, onNavigateToCreate, onView
                size="w-9 h-9" 
                onClick={() => onNavigateToProfile(currentUser.id)} 
              />
-             <div className="relative flex items-center hidden sm:flex">
+             <div className="relative flex items-center">
                <select 
                  value={currentUser.id} 
                  onChange={(e) => {
