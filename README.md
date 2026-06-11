@@ -1,113 +1,148 @@
 <div align="center">
-  <h1>ASW Taiga Issue Tracker</h1>
-  <p><em>Aplicació web per a la gestió i seguiment d'incidències inspirada en Taiga.</em></p>
+  <img src="https://upload.wikimedia.org/wikipedia/commons/a/a7/React-icon.svg" alt="React Logo" width="80" />
+  <h1>Taiga Clone - Client Web (React)</h1>
+  <p><em>Interfície d'usuari SPA responsive per a la gestió i seguiment d'incidències.</em></p>
 
   <p>
-    💬 <b>Català</b> | <a href="README.en.md">🌍 English</a>
+     <b>💬 Català</b> | <a href="README.en.md">🌍 English</a>
   </p>
 
-  <img src="https://img.shields.io/badge/Ruby-CC342D?style=flat-square&logo=ruby&logoColor=white" alt="Ruby" />
-  <img src="https://img.shields.io/badge/Rails-CC0000?style=flat-square&logo=ruby-on-rails&logoColor=white" alt="Rails" />
-  <img src="https://img.shields.io/badge/PostgreSQL-316192?style=flat-square&logo=postgresql&logoColor=white" alt="Postgres" />
-  <img src="https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker" />
-  <img src="https://img.shields.io/badge/Render-46E3B7?style=flat-square&logo=render&logoColor=white" alt="Render" />
+  <img src="https://img.shields.io/badge/React-20232A?style=flat-square&logo=react&logoColor=61DAFB" alt="React" />
+  <img src="https://img.shields.io/badge/Vite-B73BFE?style=flat-square&logo=vite&logoColor=FFD62E" alt="Vite" />
+  <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black" alt="JavaScript" />
+  <img src="https://img.shields.io/badge/CSS3-1572B6?style=flat-square&logo=css3&logoColor=white" alt="CSS3" />
+  <img src="https://img.shields.io/badge/Vercel-000000?style=flat-square&logo=vercel&logoColor=white" alt="Vercel" />
 </div>
 
 <br />
 
-Projecte desenvolupat per a l'assignatura d'Aplicacions i Serveis Web (ASW) a la Universitat Politècnica de Catalunya (UPC). Aquest projecte replica les funcionalitats core d'un Issue Tracker profesional, implementant una API RESTful robusta i una arquitectura escalable.
+Aquest repositori conté el **Front-end** desenvolupat amb **React** per al **Tercer Lliurament** de l'assignatura d'Aplicacions i Serveis Web (ASW). 
 
-🌍 **Entorn de Producció:** [Taiga App (Render)](https://taiga-app.onrender.com) *(Nota: El servidor pot trigar uns segons a arrencar per les polítiques del tier gratuït).* 
+L'aplicació és un client web SPA (Single Page Application) que actua com a interfície gràfica per consumir l'API REST de Ruby on Rails implementada en el lliurament anterior, permetent una gestió àgil i dinàmica de les incidències.
 
-🌲 **Organització:** [Organització del projecte a Taiga](https://tree.taiga.io/project/victorsalinasmontanuy-asw2526q2-it212)
+🌍 **Entorn de Producció (Frontend):** [Taiga React App (Vercel)](https://frontend-asw-taiga-project.vercel.app/)  
+⚙️ **API REST (Backend):** [Taiga API (Render)](https://taiga-app.onrender.com/api/v1)  
+🌍 **Entorn de Producció (Ruby APP):** [Taiga App (Render)](https://taiga-app.onrender.com)   
+🌲 **Organització:** [Projecte Oficial a Taiga](https://tree.taiga.io/project/victorsalinasmontanuy-asw2526q2-it212)
 
 ---
 
 ## ✨ Demostració del Projecte
 
-En el següent vídeo (1:30 min) es mostra el flux principal complet de l'aplicació:
+En el següent vídeo de 2 minuts es mostra la interacció completa amb la interfície d'usuari:
 
-https://github.com/user-attachments/assets/1831e4b5-19a0-4d83-a993-08b70420b00b
-
-*(Nota: Funcionalitats com Visualitzar Perfil o Bulk Insert entre altres queden fora del Flux Principal del projecte pero estàn implementades).*
-
-En la següent imatge es pot apreciar la visualització d'un Perfil que no es el nostre:
-
-<img src="https://github.com/user-attachments/assets/3bad8143-0b86-4692-b960-77dc38f6c3ec" alt="Perfil" width="800" />
+<div align="center">
+  <video src="https://github.com/user-attachments/assets/98cd7efd-9372-4256-a1e0-18d69dfc3240" width="100%" controls="controls"></video>
+</div>
 
 ---
 
-## 🛠️ Stack Tecnològic i Arquitectura
+## 🎯 Funcionalitats Clau
 
-* **Framework Web:** Ruby on Rails 7.1.3 (API-first design)
-* **Llenguatge:** Ruby 3.3.6
-* **Base de Dades:** SQLite3 (Desenvolupament) / PostgreSQL (Producció)
-* **Autenticació:** Google OAuth2 (OmniAuth)
-* **Storage:** Active Storage integrat amb AWS S3
-* **Infraestructura:** Dockeritzat i desplegat a Render
-* **CI/CD:** GitHub Actions per automatitzar tests i desplegaments.
-
----
-
-## 🔌 API REST (Nivell 2 Richardson)
-
-El backend actua com una API RESTful estructurada per ser consumida per qualsevol client. S'ha posat especial èmfasi en la seguretat, la validació i la coherència de les dades.
-
-* 📄 **Documentació:** Especificació completa OpenAPI a `/api/api.yml`.
-* 🧪 **Prova-ho tu mateix:**
-  1. Obre [Swagger Editor](https://editor.swagger.io/) i carrega el fitxer `api.yml`.
-  2. Registra't a la nostra [App a Render](https://taiga-app.onrender.com) amb Google.
-  3. Còpia la teva **API Key** des del teu perfil.
-  4. A Swagger, fes clic a "Authorize", enganxa la clau i comença a fer peticions a la base de dades en producció.
+- **Interfície d'Usuari Dinàmica:** Consum 100% dinàmic dels atributs de l'API (Estats, Tipus, Prioritats, Severitats). S'adapta a la base de dades.
+- **Filtrat i Ordenació:** Delegació eficient de cerques, filtres complexos i ordenació directament al backend mitjançant paràmetres d'URL exactes (`?status=New&sort=priority`).
+- **Gestió d'Incidències:** Creació, edició, visualització en detall i eliminació d'Issues.
+- **Inserció Massiva (Bulk):** Formulari especialitzat per a la creació ràpida de múltiples incidències alhora.
+- **Canvi d'Usuari Simulat:** Selecció ràpida d'usuari actiu (mitjançant injecció dinàmica d'API Key als Headers de `fetch`) per provar diferents rols i permisos a la plataforma.
+- **Pestanya Perfil:** Informació detallada de l'usuari actual.
+- **Disseny Responsive:** Adaptació total (Mobile-First) a dispositius mòbils i escriptori utilitzant Flexbox/Grid CSS.
 
 ---
 
-## ⚙️ Desplegament i CI/CD
+## 🛠️ Tecnologies clau
 
-El projecte compta amb un pipeline d'integració contínua definit a `.github/workflows/cd.yml`. Cada integració a la branca `main` dispara un procés automatitzat que:
-1. Construeix una imatge optimitzada a partir del `Dockerfile` inclòs.
-2. Executa automàticament les migracions de la base de dades (PostgreSQL).
-3. Desplega la nova versió a Render sense interrupció del servei.
+| Capa | Tecnologia |
+|------|-----------|
+| Llibreria Core | [React](https://react.dev/) |
+| Build Tool | [Vite](https://vitejs.dev/) |
+| Llenguatge | JavaScript (ES6+) |
+| Estils | CSS3 |
+| Integració Backend | Fetch API RESTful (Serveis asíncrons) |
+| Hosting / CD | [Vercel](https://vercel.com/) |
 
 ---
 
-## 🚀 Instal·lació Local
+## 🚀 Guia de posada en marxa (Local)
 
-Si vols fer córrer el projecte al teu entorn local, necessitaràs Node i Ruby instal·lats.
+Abans de començar, assegura't de tenir instal·lat **Node.js** (v18+) i **npm**.
+
+### 1. Clonar el repositori
+Obre la terminal i executa:
 
 ```bash
-# 1. Clonar el repositori
-git clone [URL_DEL_TEU_REPOSITORI]
-cd ASW_Taiga_Project
-
-# 2. Instal·lar dependències
-bundle install
-
-# 3. Configurar variables d'entorn
-# Crea un fitxer .env a l'arrel del projecte:
-GOOGLE_CLIENT_ID=el_teu_client_id
-GOOGLE_CLIENT_SECRET=el_teu_client_secret
-AWS_ACCESS_KEY_ID=la_teva_access_key
-AWS_SECRET_ACCESS_KEY=la_teva_secret_key
-AWS_REGION=us-east-1
-AWS_BUCKET=aswtaiga-bucket
-
-# 4. Preparar la base de dades
-rails db:prepare
-
-# 5. Aixecar el servidor
-bin/rails server -b 0.0.0.0
+git clone https://github.com/semabo29/Taiga_Issues_Clone_React.git
+cd Taiga_Issues_Clone_React
 ```
 
-## Equip 
+### 2. Instal·lar dependències
+Baixa tots els paquets necessaris per fer funcionar el projecte:
 
-| Nom |
-|-----|
-| Clàudia Galán Rodoreda |
+```bash
+npm install
+```
+### 3. Configurar variables d'entorn
+
+Crea un fitxer anomenat `.env` a l'arrel del projecte (al mateix nivell que `package.json`) i afegeix-hi la URL del backend:
+
+```env
+VITE_API_URL=https://taiga-app.onrender.com/api/v1
+```
+
+> **Nota:** Si vols treballar amb el backend en local, substitueix la URL anterior per:
+
+```env
+VITE_API_URL=http://localhost:3000/api/v1
+```
+
+### 4. Executar l'entorn de desenvolupament
+
+Arrenca el servidor de desenvolupament de Vite:
+
+```bash
+npm run dev
+```
+
+L'aplicació estarà disponible a:
+
+```text
+http://localhost:5173
+```
+
+---
+
+## 👥 Equip de Desenvolupament
+
+<div align="center">
+
+| Nom                     |
+| ----------------------- |
+| Clàudia Galán Rodoreda  |
 | Sergi Malaguilla Bombín |
-| Adrià Aguilar Garcia |
+| Adrià Aguilar Garcia    |
 | Victor Salinas Montanuy |
 
+</div>
+
 **Professor:** Quim Motger De La Encarnacion
-**Assignatura:** Aplicacions i Serveis Web — Grau en Enginyeria Informàtica (UPC)  
+
+**Assignatura:** Aplicacions i Serveis Web — Grau en Enginyeria Informàtica (UPC)
+
 **Convocatòria:** Quadrimestre de Primavera, curs 2025/26
+
+---
+
+## ⚖️ Llicència i Drets d'Autor
+
+© 2026 **Clàudia Galán Rodoreda**, **Sergi Malaguilla Bombín**, **Adrià Aguilar Garcia** i **Victor Salinas Montanuy**. Tots els drets reservats.
+
+Aquest repositori i el seu contingut són d'accés públic amb l'únic propòsit de servir com a portafolis personal i avaluació acadèmica.
+
+No s'atorga cap llicència (implícita o explícita) per copiar, modificar, distribuir o utilitzar aquest codi, ja sigui amb finalitats comercials o no comercials, sense el permís previ i per escrit dels autors.
+
+---
+
+<div align="center">
+  <sub>Desenvolupat com a part del projecte acadèmic de l'assignatura Aplicacions i Serveis Web (ASW) · UPC · Curs 2025/26</sub>
+</div>
+
+
