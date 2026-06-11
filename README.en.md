@@ -135,3 +135,9 @@ http://localhost:5173
 This repository and its content are publicly accessible solely for the purpose of serving as a personal portfolio and academic evaluation.
 
 No license (implicit or explicit) is granted to copy, modify, distribute, or use this code, whether for commercial or non-commercial purposes, without prior written permission from the authors.
+
+---
+
+<div align="center">
+  <sub>README created by @semabo29 (https://github.com/semabo29).</sub>
+</div>
