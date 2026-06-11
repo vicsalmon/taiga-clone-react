@@ -145,4 +145,10 @@ No s'atorga cap llicència (implícita o explícita) per copiar, modificar, dist
   <sub>Desenvolupat com a part del projecte acadèmic de l'assignatura Aplicacions i Serveis Web (ASW) · UPC · Curs 2025/26</sub>
 </div>
 
+---
+
+<div align="center">
+  <sub>README creat per @semabo29 (https://github.com/semabo29).</sub>
+</div>
+
 
